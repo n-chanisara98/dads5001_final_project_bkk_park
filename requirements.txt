@@ -5,3 +5,4 @@ dnspython
 pandas
 plotly
 duckdb
+scipy
