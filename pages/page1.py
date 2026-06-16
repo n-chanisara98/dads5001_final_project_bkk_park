@@ -90,20 +90,18 @@ def load_data():
 df_district, df_parks = load_data()
 
 # ----------------------------------------------------------------------
-# 2. SIDEBAR FILTERS พร้อมปุ่มรีเซ็ตอัจฉริยะ (ด้วย st.session_state)
+# 2. SIDEBAR FILTERS
 # ----------------------------------------------------------------------
 st.sidebar.markdown("### 🔍 ตัวกรองข้อมูล (Filters)")
 
 if "reset_clicked" not in st.session_state:
     st.session_state.reset_clicked = False
 
-# ฟังก์ชันรีเซ็ตค่ากลับเป็น Default
 def reset_filters():
     st.session_state.sel_dist = "ทั้งหมด"
     st.session_state.chk_pet = False
     st.session_state.chk_bike = False
 
-# กำหนดคีย์เพื่อให้ผูกกับ State
 selected_district = st.sidebar.selectbox("เลือกเขตพื้นที่:", ["ทั้งหมด"] + list(df_district["District"].unique()), key="sel_dist")
 st.sidebar.markdown("---")
 st.sidebar.markdown("##### ⚙️ เงื่อนไขสิ่งอำนวยความสะดวก")
@@ -127,6 +125,7 @@ if filter_bike:
 if selected_district != "ทั้งหมด":
     df_park_filtered = df_park_filtered[df_park_filtered["District"] == selected_district]
 
+# สรุปข้อมูลระดับเขตจากรายสวนที่ผ่านการกรองจริง
 df_dist_summary = df_park_filtered.groupby("District").agg(
     Total_Park_Area_Sqm=("Park_Area_Sqm", "sum"),
     Monthly_Visitors=("Park_Monthly_Visitors", "sum"),
@@ -137,6 +136,18 @@ df_dist_summary = df_dist_summary.merge(df_district[["District", "Population"]],
 df_dist_summary["Green_per_Capita"] = df_dist_summary["Total_Park_Area_Sqm"] / df_dist_summary["Population"]
 df_dist_summary["Ratio_to_Population"] = df_dist_summary["Monthly_Visitors"] / df_dist_summary["Population"]
 
+# คำนวณดัชนีความพร้อมรายสวน (มี = 1 คะแนน, ไม่มี = 0 คะแนน) เต็ม 3 คะแนน
+features_list = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
+df_park_filtered["Readiness_Score"] = df_park_filtered[features_list].apply(lambda x: x == "มี").sum(axis=1)
+
+def classify_park(score):
+    if score == 3: return "🥇 พรีเมียม (ครบ 3 ฟีเจอร์)"
+    elif score >= 1: return "🥈 มาตรฐาน (มี 1-2 ฟีเจอร์)"
+    else: return "🥉 พื้นที่พื้นฐาน (เน้นเดิน/วิ่ง)"
+
+df_park_filtered["Readiness_Class"] = df_park_filtered["Readiness_Score"].apply(classify_park)
+
+# จัดเตรียมโครงสร้างป้อนเข้าชาร์ตแบบ Dynamic 
 if selected_district == "ทั้งหมด":
     y_axis_col = "District"
     y_label_text = "เขตพื้นที่"
@@ -162,7 +173,7 @@ bkk_green_per_capita = total_green_area / total_pop if total_pop > 0 else 0
 total_parks = len(df_park_filtered)
 
 # ----------------------------------------------------------------------
-# 4. DASHBOARD UI & VISUALIZATION
+# 4. DASHBOARD UI & VISUALIZATION (แสดงผลจับคู่ทีละ 2 กราฟ)
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
 st.markdown("วิเคราะห์ภาพรวมขนาดพื้นที่ พฤติกรรมการใช้งาน และความพร้อมสอดคล้องเชิงสันทนาการ")
@@ -186,71 +197,99 @@ with col3:
     status_color = "#e74c3c" if bkk_green_per_capita < 9 else "#2ecc71"
     st.markdown(f'<div class="kpi-card" style="border-left-color: {status_color};"><div class="kpi-label">👤 พื้นที่สีเขียวต่อหัวประชากร</div><div class="kpi-value">{bkk_green_per_capita:.2f} <span style="font-size:16px; font-weight:normal;">ตร.ม./คน</span></div></div>', unsafe_allow_html=True)
 
-if not df_chart_data.empty:
-    max_area_row = df_chart_data.loc[df_chart_data["Chart_Area"].idxmax()]
-    max_visit_row = df_chart_data.loc[df_chart_data["Chart_Visitors"].idxmax()]
-    with st.container(border=True):
-        st.markdown(f"💡 **สรุปข้อมูลสำคัญตามตัวกรองปัจจุบัน:** "
-                    f"📍 พื้นที่ใหญ่ที่สุด: **{max_area_row[y_axis_col]}** ({max_area_row['Chart_Area']:,} ตร.ม.) | "
-                    f"🔥 มีผู้ใช้งานหนาแน่นที่สุด: **{max_visit_row[y_axis_col]}** ({max_visit_row['Chart_Visitors']:,} คน/เดือน)")
-
 st.markdown("<br>", unsafe_allow_html=True)
 
-### ส่วนที่ 2: กราฟขนาดพื้นที่สวน
-st.markdown(f"### 🟢 การวิเคราะห์ขนาดพื้นที่รวม ({'จำแนกรายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
-if not df_chart_data.empty:
-    df_sorted_area = df_chart_data.sort_values(by="Chart_Area", ascending=True)
-    fig_area = px.bar(
-        df_sorted_area, x="Chart_Area", y=y_axis_col, orientation='h',
-        text=df_sorted_area["Chart_Area"].apply(lambda x: f" {x:,} {area_suffix}"),
-        color="Chart_Area", color_continuous_scale="Greens",
-        labels={"Chart_Area": "ขนาดพื้นที่ (ตารางเมตร)", y_axis_col: y_label_text}
-    )
-    fig_area.update_traces(textposition='outside')
-    fig_area.update_layout(showlegend=False, coloraxis_showscale=False, height=380, margin=dict(l=150, r=100, t=10, b=10))
-    st.plotly_chart(fig_area, use_container_width=True)
-else:
-    st.info("ไม่พบข้อมูลพื้นที่สอดคล้องตามเงื่อนไขตัวกรอง")
-
-st.markdown("---")
-
-### ส่วนที่ 3: กราฟสถิติจำนวนผู้ใช้งานจริง
-st.markdown(f"### 👥 ปริมาณสถิติผู้เข้าใช้งานจริงต่อเดือน ({'จำแนกรายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
-if not df_chart_data.empty:
-    df_sorted_visitors = df_chart_data.sort_values(by="Chart_Visitors", ascending=True)
-    fig_visitors = px.bar(
-        df_sorted_visitors, x="Chart_Visitors", y=y_axis_col, orientation='h',
-        text=df_sorted_visitors["Chart_Visitors"].apply(lambda x: f" {x:,} {visitor_suffix}"),
-        color="Chart_Visitors", color_continuous_scale="Oranges",
-        labels={"Chart_Visitors": "จำนวนผู้เข้าชม (คนต่อเดือน)", y_axis_col: y_label_text}
-    )
-    fig_visitors.update_traces(textposition='outside')
-    fig_visitors.update_layout(showlegend=False, coloraxis_showscale=False, height=380, margin=dict(l=150, r=100, t=10, b=10))
-    st.plotly_chart(fig_visitors, use_container_width=True)
-else:
-    st.info("ไม่พบข้อมูลปริมาณผู้ใช้งานสำหรับเงื่อนไขการกรองนี้")
-
-st.markdown("---")
-
-### ส่วนที่ 4: กราฟความหนาแน่นสัมพัทธ์
-st.markdown(f"### 📈 อัตราส่วนสัดส่วนการแบกรับผู้ใช้งานเปรียบเทียบฐานประชากร")
-if not df_chart_data.empty:
-    df_sorted_ratio = df_chart_data.sort_values(by="Chart_Ratio", ascending=True)
-    fig_ratio = px.bar(
-        df_sorted_ratio, x="Chart_Ratio", y=y_axis_col, orientation='h',
-        text=df_sorted_ratio["Chart_Ratio"].apply(lambda x: f" {x:.2f} {ratio_suffix}"),
-        color="Chart_Ratio", color_continuous_scale="Purples",
-        labels={"Chart_Ratio": "ดัชนีอัตราส่วนความหนาแน่น (เท่า)", y_axis_col: y_label_text}
-    )
-    fig_ratio.update_traces(textposition='outside')
-    fig_ratio.update_layout(showlegend=False, coloraxis_showscale=False, height=380, margin=dict(l=150, r=100, t=10, b=10))
-    st.plotly_chart(fig_ratio, use_container_width=True)
-
-st.markdown("---")
-
-### ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด (Export Data Function)
 # ----------------------------------------------------------------------
+# 📊 คู่ที่ 1: ขนาดพื้นที่รวม VS ปริมาณผู้ใช้งานจริง (2 Columns)
+# ----------------------------------------------------------------------
+pair1_col1, pair1_col2 = st.columns(2)
 
+with pair1_col1:
+    st.markdown(f"##### 🟢 การวิเคราะห์ขนาดพื้นที่รวม ({'รายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
+    if not df_chart_data.empty:
+        df_sorted_area = df_chart_data.sort_values(by="Chart_Area", ascending=True)
+        fig_area = px.bar(
+            df_sorted_area, x="Chart_Area", y=y_axis_col, orientation='h',
+            text=df_sorted_area["Chart_Area"].apply(lambda x: f" {x:,} {area_suffix}"),
+            color="Chart_Area", color_continuous_scale="Greens",
+            labels={"Chart_Area": "ขนาดพื้นที่ (ตร.ม.)", y_axis_col: y_label_text}
+        )
+        fig_area.update_traces(textposition='outside')
+        fig_area.update_layout(showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10))
+        st.plotly_chart(fig_area, use_container_width=True)
+    else:
+        st.info("ไม่พบข้อมูลพื้นที่")
+
+with pair1_col2:
+    st.markdown(f"##### 👥 ปริมาณสถิติผู้เข้าใช้งานจริงต่อเดือน ({'รายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
+    if not df_chart_data.empty:
+        df_sorted_visitors = df_chart_data.sort_values(by="Chart_Visitors", ascending=True)
+        fig_visitors = px.bar(
+            df_sorted_visitors, x="Chart_Visitors", y=y_axis_col, orientation='h',
+            text=df_sorted_visitors["Chart_Visitors"].apply(lambda x: f" {x:,} {visitor_suffix}"),
+            color="Chart_Visitors", color_continuous_scale="Oranges",
+            labels={"Chart_Visitors": "จำนวนผู้เข้าชม (คน/เดือน)", y_axis_col: y_label_text}
+        )
+        fig_visitors.update_traces(textposition='outside')
+        fig_visitors.update_layout(showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10))
+        st.plotly_chart(fig_visitors, use_container_width=True)
+    else:
+        st.info("ไม่พบข้อมูลผู้ใช้งาน")
+
+st.markdown("---")
+
+# ----------------------------------------------------------------------
+# 📊 คู่ที่ 2: อัตราส่วนแบกรับประชากร VS โดนัทสิ่งอำนวยความสะดวก (2 Columns)
+# ----------------------------------------------------------------------
+pair2_col1, pair2_col2 = st.columns(2)
+
+with pair2_col1:
+    st.markdown(f"##### 📈 อัตราส่วนสัดส่วนการแบกรับผู้ใช้งานเปรียบเทียบฐานประชากร")
+    if not df_chart_data.empty:
+        df_sorted_ratio = df_chart_data.sort_values(by="Chart_Ratio", ascending=True)
+        fig_ratio = px.bar(
+            df_sorted_ratio, x="Chart_Ratio", y=y_axis_col, orientation='h',
+            text=df_sorted_ratio["Chart_Ratio"].apply(lambda x: f" {x:.2f} {ratio_suffix}"),
+            color="Chart_Ratio", color_continuous_scale="Purples",
+            labels={"Chart_Ratio": "ดัชนีอัตราส่วน (เท่า)", y_axis_col: y_label_text}
+        )
+        fig_ratio.update_traces(textposition='outside')
+        fig_ratio.update_layout(showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10))
+        st.plotly_chart(fig_ratio, use_container_width=True)
+    else:
+        st.info("ไม่พบข้อมูลดัชนี")
+
+with pair2_col2:
+    st.markdown(f"##### 🍩 สัดส่วนระดับความพร้อมของสิ่งอำนวยความสะดวกภายในสวน")
+    if not df_park_filtered.empty:
+        # คำนวณและนับสัดส่วนระดับสวนในเงื่อนไขปัจจุบันเพื่อทำ Donut Chart
+        df_donut_data = df_park_filtered["Readiness_Class"].value_counts().reset_index()
+        df_donut_data.columns = ["ระดับความพร้อม", "จำนวนสวน"]
+        
+        fig_donut = px.pie(
+            df_donut_data, values="จำนวนสวน", names="ระดับความพร้อม", hole=0.5,
+            color="ระดับความพร้อม",
+            color_discrete_map={
+                "🥇 พรีเมียม (ครบ 3 ฟีเจอร์)": "#2ecc71",
+                "🥈 มาตรฐาน (มี 1-2 ฟีเจอร์)": "#f1c40f",
+                "🥉 พื้นที่พื้นฐาน (เน้นเดิน/วิ่ง)": "#e74c3c"
+            }
+        )
+        fig_donut.update_traces(textposition='inside', textinfo='percent+value')
+        fig_donut.update_layout(
+            height=360,
+            margin=dict(l=20, r=20, t=10, b=10),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
+        )
+        st.plotly_chart(fig_donut, use_container_width=True)
+    else:
+        st.info("ไม่พบข้อมูลสิ่งอำนวยความสะดวก")
+
+st.markdown("---")
+
+# ----------------------------------------------------------------------
+# 📋 ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด
+# ----------------------------------------------------------------------
 table_col, download_col = st.columns([4, 1])
 with table_col:
     st.markdown("### 📋 ตารางสถิติและรายละเอียดสิ่งอำนวยความสะดวกของสวนสาธารณะ")
@@ -262,12 +301,11 @@ if not df_park_filtered.empty:
     
     with download_col:
         st.markdown("<br>", unsafe_allow_html=True)
-        # แปลงไฟล์เป็น CSV เพื่อให้พร้อมดาวน์โหลด (รองรับภาษาไทยด้วย utf-8-sig)
         csv_data = df_table_show.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
-            label="📥 ดาวน์โหลดไฟล์ข้อมูล (CSV)",
+            label="📥 ดาวน์โหลดข้อมูล (CSV)",
             data=csv_data,
-            file_name="bkk_park_filtered_data.csv",  # แก้ไขจาก fileName เป็น file_name แล้ว
+            file_name="bkk_park_filtered_data.csv",
             mime="text/csv",
             use_container_width=True
         )
