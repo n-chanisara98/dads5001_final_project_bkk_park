@@ -121,23 +121,19 @@ if selected_district != "ทั้งหมด":
 
 
 # ----------------------------------------------------------------------
-# 3. PREPARE DYNAMIC DATA FOR CHARTS (หัวใจสำคัญ: จัดโครงสร้างข้อมูลให้ขึ้นแกนเดียว)
+# 3. PREPARE DYNAMIC DATA FOR CHARTS
 # ----------------------------------------------------------------------
 if selected_district == "ทั้งหมด":
-    # ถ้าเลือกทั้งหมด ให้แกน Y เป็น "District" (รายเขต)
     y_axis_col = "District"
     y_label_text = "เขตพื้นที่"
     
-    # ดึงค่าพื้นที่และจำนวนคนเข้าจากระดับเขตมาวาดกราฟเดี่ยว
     df_chart_data = df_dist_filtered.copy()
     df_chart_data["Chart_Area"] = df_chart_data["Total_Park_Area_Sqm"]
     df_chart_data["Chart_Visitors"] = df_chart_data["Monthly_Visitors"]
     
-    # พลอตข้อความกำกับตัวเลขบนแท่ง
     area_text = df_chart_data["Chart_Area"].apply(lambda x: f" {x:,} ตร.ม.")
     visitor_text = df_chart_data["Chart_Visitors"].apply(lambda x: f" {x:,} คน/เดือน")
 else:
-    # ถ้าเจาะจงเขต ให้แกน Y สลับร่างเป็น "Park_Name" (รายสวนในเขตนั้น)
     y_axis_col = "Park_Name"
     y_label_text = f"รายชื่อสวนสาธารณะในเขต {selected_district}"
     
@@ -157,7 +153,7 @@ total_parks = len(df_park_filtered)
 
 
 # ----------------------------------------------------------------------
-# 4. DASHBOARD UI & VISUALIZATION (ดีไซน์แยกกราฟเดี่ยว แถวยาวเต็มจอ)
+# 4. DASHBOARD UI & VISUALIZATION (เดี่ยว แถวยาวเต็มจอ)
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
 st.markdown("วิเคราะห์ภาพรวมขนาดพื้นที่ พฤติกรรมการใช้งาน และความพร้อมสอดคล้องเชิงสันทนาการ")
@@ -184,7 +180,7 @@ with col3:
 st.markdown("<br>", unsafe_allow_html=True)
 
 
-### ส่วนที่ 2: กราฟขนาดพื้นที่สวน (เดี่ยว แถวยาวเต็มตา)
+### ส่วนที่ 2: กราฟขนาดพื้นที่รวม (เดี่ยว แถวยาวเต็มตา)
 st.markdown(f"### 🟢 การวิเคราะห์ขนาดพื้นที่รวม ({'จำแนกรายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
 df_sorted_area = df_chart_data.sort_values(by="Chart_Area", ascending=True)
 
@@ -226,12 +222,13 @@ st.plotly_chart(fig_visitors, use_container_width=True)
 st.markdown("---")
 
 
+### 📋 ตารางสถิติสรุปปิดท้ายแบบ Real-time (คงเหลือไว้เฉพาะตารางข้อมูลตามฟิลเตอร์)
+st.markdown("### 📋 ตารางข้อมูลสวนสาธารณะและรายละเอียดสิ่งอำนวยความสะดวก")
+features_disp = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
 
-### 📋 ตารางสถิติสรุปปิดท้ายแบบ Real-time
-st.markdown("### 📋 ตารางข้อมูลสวนสาธารณะและรายละเอียดฟีเจอร์")
 if not df_park_filtered.empty:
     st.dataframe(
-        df_park_filtered[["Park_Name", "District"] + features], 
+        df_park_filtered[["Park_Name", "District"] + features_disp], 
         use_container_width=True, 
         hide_index=True
     )
