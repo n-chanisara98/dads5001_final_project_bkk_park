@@ -130,7 +130,11 @@ duck_conn.register("park", df_p)
 duck_conn.register("park_ll", df_ll)
 duck_conn.register("park_dist", df_d)
 
-df_parks_merged = duck_conn.execute("""
+st.write(df_p.head())
+st.write(df_ll.head())
+st.write(df_d.head())
+
+'''df_parks_merged = duck_conn.execute("""
 SELECT
     p.NAME,
     p.OPEN,
@@ -149,7 +153,7 @@ INNER JOIN park_ll ll
     ON p.NAME = ll.PARK_NAME
 LEFT JOIN park_dist d
     ON p.NAME = d.PARK_NAME
-""").df()
+""").df()'''
 
 duck_conn.register("parks", df_parks_merged)
 
