@@ -1,0 +1,29 @@
+name: Air4Thai PM2.5 Data Crawler
+
+on:
+  schedule:
+    # สั่งหุ่นยนต์: "ตื่นมารันโค้ดทุกนาทีที่ 5 ของทุกชั่วโมงนะ" (เช่น 15:05, 16:05)
+    - cron: '5 * * * *'
+  workflow_dispatch: # ปุ่มกดสั่งรันมือ เผื่อเราอยากกดทดสอบเองบนเว็บ
+
+jobs:
+  scrape-and-save:
+    runs-on: ubuntu-latest # สั่งหุ่นยนต์: "ไปเปิดคอมจำลองระบบ Linux ขึ้นมา"
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4 # สั่งหุ่นยนต์: "ไปดึงโค้ดดึงฝุ่นในโปรเจกต์นี้มาใส่คอมจำลอง"
+
+     Tar- name: Set up Python
+      uses: actions/setup-python@v5 # สั่งหุ่นยนต์: "ติดตั้ง Python 3.11 ในคอมจำลองให้ด้วย"
+      with:
+        python-version: '3.11'
+
+     Tar- name: Install dependencies
+      run: |
+        pip install requests pymongo # สั่งหุ่นยนต์: "ดาวน์โหลดแพ็กเกจรันโค้ดดึงฝุ่น"
+
+     Tar- name: Run get_pm25_auto.py
+      env:
+        MONGO_URI: ${{ secrets.MONGO_URI }} # สั่งหุ่นยนต์: "แอบไปหยิบรหัสผ่านที่เราซ่อนไว้ในเว็บมาใช้"
+      run: python "get_pm25_auto.py" # สั่งหุ่นยนต์: "กดปุ่มรันไฟล์ดึงฝุ่น ยิงเข้า MongoDB เลย!"
