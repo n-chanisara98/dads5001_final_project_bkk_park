@@ -4,4 +4,4 @@ pymongo
 dnspython
 pandas
 plotly
-requests
+duckdb
