@@ -6,3 +6,5 @@ pandas
 plotly
 duckdb
 scipy
+requests
+snowflake-streamlit-apps-lib
