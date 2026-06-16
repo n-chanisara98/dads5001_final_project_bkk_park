@@ -15,12 +15,36 @@ st.subheader("ค้นหาสวนสาธารณะที่เหมา
 # 1. DATABASE CONNECTIONS (MongoDB & Snowflake)
 # =====================================================================
 
+# แก้ไขเฉพาะช่วงนี้ในโค้ด Page 2 ของคุณนะครับสัด
+import snowflake.connector
+
 @st.cache_resource
 def init_connections():
+    # 1. เชื่อมต่อ MongoDB ตามปกติ
     mongo_client = MongoClient(st.secrets["MONGO_URI"])
-    snowflake_conn = st.connection("snowflake")
-    return mongo_client, snowflake_conn
+    
+    # 2. เชื่อมต่อ Snowflake ตรงๆ ผ่าน Connector แบบไม่ต้องง้อ st.connection
+    # มันจะวิ่งไปดึงข้อมูลจากโครงสร้างกรุ๊ปที่คุณเขียนไว้ในหน้าเว็บ Secrets ทันที
+    ctx = snowflake.connector.connect(
+        user=st.secrets["connections"]["snowflake"]["user"],
+        password=st.secrets["connections"]["snowflake"]["password"],
+        account=st.secrets["connections"]["snowflake"]["account"],
+        warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
+        database=st.secrets["connections"]["snowflake"]["database"],
+        schema=st.secrets["connections"]["snowflake"]["schema"],
+        role=st.secrets["connections"]["snowflake"]["role"]
+    )
+    
+    # ห่อคิวรีสคริปต์จำลอง เพื่อให้ฟังก์ชัน .query() ในโค้ดดั้งเดิมด้านล่างรันต่อได้แบบไม่ต้องรื้อโค้ดใหม่
+    class SnowflakeWrapper:
+        def __init__(self, connection):
+            self.conn = connection
+        def query(self, sql):
+            return pd.read_sql(sql, self.conn)
+            
+    return mongo_client, SnowflakeWrapper(ctx)
 
+# นำตัวแปรไปใช้งานต่อตามปกติ โค้ดด้านล่างใช้ได้เหมือนเดิมเป๊ะ!
 mongo_client, sf_conn = init_connections()
 
 # 🔴 !! อย่าลืมเปลี่ยนชื่อ Database ของคุณตรงนี้ !! 🔴
