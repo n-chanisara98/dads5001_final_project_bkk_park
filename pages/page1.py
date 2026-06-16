@@ -10,7 +10,6 @@ st.set_page_config(page_title="Page 1: Park Analytics", page_icon="🌳", layout
 # ----------------------------------------------------------------------
 @st.cache_data
 def load_data():
-    # ข้อมูลรายเขต
     district_data = {
         "District": ["จตุจักร", "ปทุมวัน", "ราชเทวี", "คลองเตย", "บางขุนเทียน", "ลาดกระบัง", "พระนคร", "ห้วยขวาง", "บางแค", "ธนบุรี"],
         "Population": [150000, 50000, 70000, 100000, 180000, 170000, 45000, 80000, 130000, 110000],
@@ -22,7 +21,6 @@ def load_data():
     df_district["Green_per_Capita"] = df_district["Total_Park_Area_Sqm"] / df_district["Population"]
     df_district["Visitor_Density_Ratio"] = df_district["Monthly_Visitors"] / df_district["Population"]
 
-    # ข้อมูลรายสวน (มีการใส่ตัวเลขจำลองพื้นที่ Sqm และผู้เข้าใช้ของแต่ละสวนเพื่อใช้ตอน Drill-down)
     park_data = {
         "Park_Name": [
             "สวนจตุจักร", "สวนวชิรเบญจทัศ (สวนรถไฟ)", "สวนสมเด็จพระนางเจ้าสิริกิตติ์ฯ", "สวนประชานิเวศน์", "สวนวิภาวดี",
@@ -63,7 +61,6 @@ def load_data():
             "มี", "ไม่มี", "ไม่มี", "ไม่มี", "มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี",
             "มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี", "ไม่มี"
         ],
-        # ข้อมูลจำลองรายส่วนสำหรับการวาดกราฟเดี่ยวตอนเลือกรายเขต
         "Park_Area_Sqm": [
             300000, 400000, 150000, 30000, 20000,
             450000, 100000, 50000,
@@ -126,7 +123,7 @@ if selected_district != "ทั้งหมด":
     df_park_filtered = df_park_filtered[df_park_filtered["District"] == selected_district]
 
 # ----------------------------------------------------------------------
-# 3. DATA CALCULATION (สถิติสำหรับ KPI Cards)
+# 3. DATA CALCULATION
 # ----------------------------------------------------------------------
 total_green_area = df_park_filtered["Park_Area_Sqm"].sum() if selected_district != "ทั้งหมด" else df_dist_filtered["Total_Park_Area_Sqm"].sum()
 total_pop = df_dist_filtered["Population"].sum()
@@ -162,12 +159,8 @@ st.markdown("<br>", unsafe_allow_html=True)
 
 
 ### ส่วนที่ 2 & 3: LOGIC สลับร่างกราฟ (Drill-down)
-chart_col1, chart_col2 = st.columns(2)
-
 if selected_district == "ทั้งหมด":
-    # ------------------------------------------------------------------
-    # โหมดภาพรวม: แสดงรายเขต (District Mode)
-    # ------------------------------------------------------------------
+    chart_col1, chart_col2 = st.columns(2)
     with chart_col1:
         st.markdown("##### 🟢 พื้นที่สีเขียวต่อประชากร รายเขต")
         df_sorted = df_dist_filtered.sort_values(by="Green_per_Capita", ascending=True)
@@ -188,7 +181,6 @@ if selected_district == "ทั้งหมด":
 
     # ส่วนที่ 3: Stack ความพร้อมแบบรายเขต
     st.markdown("### 📊 วิเคราะห์สัดส่วนระดับความพร้อมของสิ่งอำนวยความสะดวก แยกตามรายเขต")
-    # หาค่าเฉลี่ยคะแนนความพร้อมของสวนในแต่ละเขตเพื่อเอามาพลอต Stack
     df_district_stack = df_park_filtered.groupby(["District", "Total_Score"]).size().reset_index(name="Count")
     df_district_stack["Total_Score"] = df_district_stack["Total_Score"].map({
         3: "🥇 ครบ 3 ฟีเจอร์ (พรีเมียม)", 2: "🥈 มี 2 ฟีเจอร์", 1: "🥉 มี 1 ฟีเจอร์", 0: "❌ ไม่มีฟีเจอร์สันทนาการเลย"
@@ -202,50 +194,48 @@ if selected_district == "ทั้งหมด":
 
 else:
     # ------------------------------------------------------------------
-    # โหมดเจาะลึก: สลับร่างเป็นรายสวนในเขตนั้นๆ (Park Mode)
+    # โหมดเจาะลึก: แยกกราฟเดี่ยวแบบเต็มตาเรียงต่อกันเป็นรายสวน (เช่น จตุจักร)
     # ------------------------------------------------------------------
-    with chart_col1:
-        st.markdown(f"##### 🟢 ขนาดพื้นที่สวนแต่ละแห่ง ในเขต{selected_district}")
-        df_park_sorted = df_park_filtered.sort_values(by="Park_Area_Sqm", ascending=True)
-        fig1_park = px.bar(df_park_sorted, x="Park_Area_Sqm", y="Park_Name", orientation='h', text=df_park_sorted["Park_Area_Sqm"].apply(lambda x: f" {x:,} ตร.ม."), color="Park_Area_Sqm", color_continuous_scale="Greens")
-        fig1_park.update_traces(textposition='outside')
-        fig1_park.update_layout(showlegend=False, coloraxis_showscale=False, height=350, margin=dict(l=150, r=50, t=10, b=10))
-        st.plotly_chart(fig1_park, use_container_width=True)
-
-    with chart_col2:
-        st.markdown(f"##### 👥 จำนวนผู้เข้าใช้งานจริงรายสวน ในเขต{selected_district}")
-        df_park_sorted_visit = df_park_filtered.sort_values(by="Park_Monthly_Visitors", ascending=True)
-        fig2_park = px.bar(df_park_sorted_visit, x="Park_Monthly_Visitors", y="Park_Name", orientation='h', text=df_park_sorted_visit["Park_Monthly_Visitors"].apply(lambda x: f" {x:,} คน"), color="Park_Monthly_Visitors", color_continuous_scale="Oranges")
-        fig2_park.update_traces(textposition='outside')
-        fig2_park.update_layout(showlegend=False, coloraxis_showscale=False, height=350, margin=dict(l=150, r=50, t=10, b=10))
-        st.plotly_chart(fig2_park, use_container_width=True)
+    
+    # กราฟที่ 1: ขนาดพื้นที่สวนแต่ละแห่ง (แยกเดี่ยว เต็มหน้าจอ)
+    st.markdown(f"### 🟢 ขนาดพื้นที่สวนแต่ละแห่ง ในเขต{selected_district}")
+    df_park_sorted = df_park_filtered.sort_values(by="Park_Area_Sqm", ascending=True)
+    fig1_park = px.bar(
+        df_park_sorted, 
+        x="Park_Area_Sqm", 
+        y="Park_Name", 
+        orientation='h', 
+        text=df_park_sorted["Park_Area_Sqm"].apply(lambda x: f" {x:,} ตร.ม."), 
+        color="Park_Area_Sqm", 
+        color_continuous_scale="Greens",
+        labels={"Park_Area_Sqm": "ขนาดพื้นที่ (ตารางเมตร)", "Park_Name": "ชื่อสวนสาธารณะ"}
+    )
+    fig1_park.update_traces(textposition='outside')
+    fig1_park.update_layout(showlegend=False, coloraxis_showscale=False, height=400, margin=dict(l=150, r=100, t=20, b=20))
+    st.plotly_chart(fig1_park, use_container_width=True)
 
     st.markdown("---")
 
-    # ส่วนที่ 3: Stack ความพร้อมแบบรายสถานที่ (โชว์ฟีเจอร์จริงของสวนแต่ละแห่งในเขตนั้นไปเลย)
-    st.markdown(f"### 🗺️ เจาะลึกสิ่งอำนวยความสะดวกรายสวน ในเขต{selected_district}")
-    
-    # ดึงข้อมูลฟีเจอร์รายสวนมาทำ Stack เพื่อดูว่าสวนแต่ละแห่งได้สีเขียวหรือสีแดงในฟีเจอร์ไหนบ้าง
-    features = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
-    melted_records = []
-    for _, row in df_park_filtered.iterrows():
-        for feat in features:
-            melted_records.append({
-                "Park_Name": row["Park_Name"],
-                "Feature": feat,
-                "Status": "มีบริการ" if row[feat] == "มี" else "ไม่มีบริการ"
-            })
-    df_park_stack = pd.DataFrame(melted_records)
-    
-    fig3_park = px.bar(df_park_stack, x="Feature", y="Park_Name", color="Status", orientation='h',
-                       color_discrete_map={"มีบริการ": "#2ecc71", "ไม่มีบริการ": "#e74c3c"},
-                       labels={"Feature": "ประเภทฟีเจอร์", "Park_Name": "ชื่อสวนสาธารณะ", "Status": "สถานะ"})
-    fig3_park.update_layout(barmode="stack", height=320, legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1))
-    st.plotly_chart(fig3_park, use_container_width=True)
+    # กราฟที่ 2: จำนวนผู้เข้าใช้งานจริงรายสวน (แยกเดี่ยว เต็มหน้าจอ)
+    st.markdown(f"### 👥 จำนวนผู้เข้าใช้งานจริงรายสวน ในเขต{selected_district}")
+    df_park_sorted_visit = df_park_filtered.sort_values(by="Park_Monthly_Visitors", ascending=True)
+    fig2_park = px.bar(
+        df_park_sorted_visit, 
+        x="Park_Monthly_Visitors", 
+        y="Park_Name", 
+        orientation='h', 
+        text=df_park_sorted_visit["Park_Monthly_Visitors"].apply(lambda x: f" {x:,} คน/เดือน"), 
+        color="Park_Monthly_Visitors", 
+        color_continuous_scale="Oranges",
+        labels={"Park_Monthly_Visitors": "จำนวนผู้เข้าใช้งาน (คนต่อเดือน)", "Park_Name": "ชื่อสวนสาธารณะ"}
+    )
+    fig2_park.update_traces(textposition='outside')
+    fig2_park.update_layout(showlegend=False, coloraxis_showscale=False, height=400, margin=dict(l=150, r=100, t=20, b=20))
+    st.plotly_chart(fig2_park, use_container_width=True)
 
+    st.markdown("---")
 
-st.markdown("---")
-
+   
 ### 📋 ตารางข้อมูลสวนสาธารณะตามเงื่อนไขตัวกรองปัจจุบัน
 st.markdown("### 📋 รายชื่อและรายละเอียดสิ่งอำนวยความสะดวกของสวนสาธารณะ")
 features_disp = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
