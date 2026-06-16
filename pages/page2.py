@@ -151,6 +151,8 @@ LEFT JOIN park_dist d
     ON p.NAME = d.PARK_NAME
 """).df()
 
+duck_conn.register("parks", df_parks_merged)
+
 # =====================================================================
 # 4. GEOSPATIAL CALCULATIONS (จับคู่พิกัดหา ฝุ่นที่ใกล้สุด & รถไฟฟ้าที่ใกล้สุด)
 # =====================================================================
@@ -234,7 +236,7 @@ if filter_car:     where_clauses.append("CAR_PARK = 1")
 if filter_bike:    where_clauses.append("BICYCLE_PATH = 1")
 if filter_pet:     where_clauses.append("PET_FRIENDLY = 1")
 
-query_string = f"SELECT * FROM df_parks_merged WHERE " + " AND ".join(where_clauses)
+query_string = f"SELECT * FROM parks WHERE " + " AND ".join(where_clauses)
 
 # สั่งคิวรีผลลัพธ์ผ่าน DuckDB ดึงผลลัพธ์สุดท้ายออกมาใช้งาน
 df_filtered = duck_conn.execute(query_string, param_list).df()
