@@ -6,63 +6,6 @@ import streamlit as st
 st.set_page_config(page_title="Page 1: Park Analytics", page_icon="🌳", layout="wide")
 
 # ----------------------------------------------------------------------
-# 🌟 [UPDATE] CUSTOM CSS FOR DARK GLASSMORPHISM (สไตล์แบบไฟล์ image_eb348f.png)
-# ----------------------------------------------------------------------
-st.markdown("""
-<style>
-    /* 1. ใส่รูปพื้นหลังสวนสาธารณะร่มรื่น */
-    .stApp {
-        background-image: url("https://images.unsplash.com/photo-1596436889106-be35e843f974?q=80&w=1920");
-        background-size: cover;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-attachment: fixed;
-    }
-
-    /* 2. สร้างแผ่นกระจกฝ้าสีเข้มทึบ (Dark Glass) ครอบคอนเทนต์ทั้งหน้าตามแบบตัวอย่าง */
-    .main .block-container {
-        background-color: rgba(22, 28, 36, 0.92) !important; /* สีเข้มทึบโปร่งแสง */
-        padding: 50px !important;
-        border-radius: 24px !important;
-        box-shadow: 0 15px 50px rgba(0, 0, 0, 0.6) !important;
-        backdrop-filter: blur(15px) !important; /* เอฟเฟกต์เบลอฉากหลังสวน */
-        -webkit-backdrop-filter: blur(15px) !important;
-        margin-top: 25px !important;
-        margin-bottom: 25px !important;
-    }
-
-    /* 3. ปรับสีฟอนต์หัวข้อหลักและข้อความทั่วไปให้เป็นสีขาว/สว่าง เพื่อให้อ่านง่ายบนพื้นหลังเข้ม */
-    h1, h2, h3, h4, h5, h6, p, span, label {
-        color: #ffffff !important;
-    }
-    
-    .stMarkdown p {
-        color: #bdc8d5 !important; /* สีข้อความรองให้อ่านสบายตา */
-    }
-
-    /* 4. ออกแบบกล่อง KPI Cards ให้เป็นกระจกฝ้าดำขอบมนตามภาพ image_eb348f.png */
-    .kpi-card { 
-        background-color: rgba(255, 255, 255, 0.06) !important; 
-        padding: 22px; 
-        border-radius: 16px; 
-        border: 1px solid rgba(255, 255, 255, 0.1); /* เส้นขอบกระจกบางๆ */
-        border-left: 6px solid #2ecc71; /* ไฮไลท์สีเขียว */
-        text-align: left; 
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-    }
-    .kpi-label { font-size: 13px; color: #a0aec0 !important; text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
-    .kpi-value { font-size: 28px; color: #ffffff !important; font-weight: 700; }
-
-    /* 5. เคลียร์พื้นหลังตารางข้อมูลด้านล่างให้เข้ากับ Dark Theme */
-    .stDataFrame {
-        background-color: rgba(0, 0, 0, 0.2) !important;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-radius: 12px;
-    }
-</style>
-""", unsafe_allow_html=True)
-
-# ----------------------------------------------------------------------
 # 1. MOCK DATA 
 # ----------------------------------------------------------------------
 @st.cache_data
@@ -94,7 +37,7 @@ def load_data():
             "ปทุมวัน", "ปทุมวัน", "ปทุมวัน",
             "ราชเทวี", "ราชเทวี",
             "คลองเตย", "คลองเตย", "คลองเตย", "คลองเตย",
-            "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน",
+            "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "滿足ขุนเทียน",
             "ลาดกระบัง", "ลาดกระบัง", "ลาดกระบัง", "ลาดกระบัง", "ลาดกระบัง",
             "พระนคร", "พระนคร",
             "ห้วยขวาง",
@@ -190,6 +133,7 @@ df_dist_summary = df_dist_summary.merge(df_district[["District", "Population"]],
 df_dist_summary["Green_per_Capita"] = df_dist_summary["Total_Park_Area_Sqm"] / df_dist_summary["Population"]
 df_dist_summary["Ratio_to_Population"] = df_dist_summary["Monthly_Visitors"] / df_dist_summary["Population"]
 
+# จัดเตรียมโครงสร้างป้อนเข้าชาร์ตแบบ Dynamic 
 if selected_district == "ทั้งหมด":
     y_axis_col = "District"
     y_label_text = "เขตพื้นที่"
@@ -215,36 +159,41 @@ bkk_green_per_capita = total_green_area / total_pop if total_pop > 0 else 0
 total_parks = len(df_park_filtered)
 
 # ----------------------------------------------------------------------
-# 4. DASHBOARD UI & VISUALIZATION
+# 4. DASHBOARD UI & VISUALIZATION (รวมสรุปจุดสำคัญที่สุดไว้ด้านบนอันเดียว)
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
 st.markdown("วิเคราะห์ภาพรวมขนาดพื้นที่ พฤติกรรมการใช้งาน และความพร้อมสอดคล้องเชิงสันทนาการ")
 st.markdown("---")
 
-### ส่วนที่ 1: KPI SCORECARDS (ปรับปรุงโครงสร้างให้โปร่งแสงแบบภาพ image_eb348f.png)
+### ส่วนที่ 1: KPI SCORECARDS
+st.markdown("""
+<style>
+    .kpi-card { background-color: var(--background-color, #f8f9fa); padding: 22px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); border-left: 6px solid #2ecc71; text-align: left; }
+    .kpi-label { font-size: 13px; color: #7f8c8d; text-transform: uppercase; margin-bottom: 6px; }
+    .kpi-value { font-size: 26px; color: var(--text-color, #2c3e50); font-weight: 700; }
+</style>
+""", unsafe_allow_html=True)
+
 col1, col2, col3 = st.columns(3)
 with col1:
-    st.markdown(f'<div class="kpi-card" style="border-left-color: #2ecc71;"><div class="kpi-label">🍃 พื้นที่สีเขียวรวม (ตามตัวกรอง)</div><div class="kpi-value">{total_green_area:,.1f} <span style="font-size:16px; font-weight:normal; color:#bdc8d5;">ตร.ม.</span></div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card" style="border-left-color: #2ecc71;"><div class="kpi-label">🍃 พื้นที่สีเขียวรวม (ตามตัวกรอง)</div><div class="kpi-value">{total_green_area:,.1f} <span style="font-size:16px; font-weight:normal;">ตร.ม.</span></div></div>', unsafe_allow_html=True)
 with col2:
-    st.markdown(f'<div class="kpi-card" style="border-left-color: #3498db;"><div class="kpi-label">🏞️ จำนวนสวนสาธารณะรวม</div><div class="kpi-value">{total_parks:,} <span style="font-size:16px; font-weight:normal; color:#bdc8d5;">แห่ง</span></div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card" style="border-left-color: #3498db;"><div class="kpi-label">🏞️ จำนวนสวนสาธารณะรวม</div><div class="kpi-value">{total_parks:,} <span style="font-size:16px; font-weight:normal;">แห่ง</span></div></div>', unsafe_allow_html=True)
 with col3:
     status_color = "#e74c3c" if bkk_green_per_capita < 9 else "#2ecc71"
-    st.markdown(f'<div class="kpi-card" style="border-left-color: {status_color};"><div class="kpi-label">👤 พื้นที่สีเขียวต่อหัวประชากร</div><div class="kpi-value">{bkk_green_per_capita:.2f} <span style="font-size:16px; font-weight:normal; color:#bdc8d5;">ตร.ม./คน</span></div></div>', unsafe_allow_html=True)
+    st.markdown(f'<div class="kpi-card" style="border-left-color: {status_color};"><div class="kpi-label">👤 พื้นที่สีเขียวต่อหัวประชากร</div><div class="kpi-value">{bkk_green_per_capita:.2f} <span style="font-size:16px; font-weight:normal;">ตร.ม./คน</span></div></div>', unsafe_allow_html=True)
 
-# กล่องสรุปจุดสำคัญที่สุดเพียงหนึ่งเดียว (Dark Container สไตล์กล่องแจ้งเตือน)
+# [กล่องสรุปจุดสำคัญที่สุดเพียงหนึ่งเดียว ไว้ด้านบนสุด]
 if not df_chart_data.empty:
     max_area_name = df_chart_data.loc[df_chart_data["Chart_Area"].idxmax()][y_axis_col]
     max_visit_name = df_chart_data.loc[df_chart_data["Chart_Visitors"].idxmax()][y_axis_col]
     max_ratio_name = df_chart_data.loc[df_chart_data["Chart_Ratio"].idxmax()][y_axis_col]
     
-    st.markdown(f"""
-    <div style="background-color: rgba(255, 255, 255, 0.04); padding: 16px; border-radius: 12px; border: 1px solid rgba(255, 255, 255, 0.08); margin-top: 15px;">
-        <span style="color: #2ecc71; font-weight: bold;">💡 จุดสำคัญที่สุดเชิงสถิติ:</span> 
-        <span style="color: #ffffff;">🟢 พื้นที่ใหญ่ที่สุด:</span> <b>{max_area_name}</b> | 
-        <span style="color: #ffffff;">👥 ผู้ใช้งานรายเดือนสูงสุด:</span> <b>{max_visit_name}</b> | 
-        <span style="color: #ffffff;">📈 แบกรับภาระสูงสุด:</span> <b>{max_ratio_name}</b>
-    </div>
-    """, unsafe_allow_html=True)
+    with st.container(border=True):
+        st.markdown(f"💡 **จุดสำคัญที่สุดเชิงสถิติ:** "
+                    f"🟢 พื้นที่ใหญ่ที่สุด: **{max_area_name}** | "
+                    f"👥 ผู้ใช้งานจริงต่อเดือนสูงสุด: **{max_visit_name}** | "
+                    f"📈 แบกรับภาระต่อประชากรสูงสุด: **{max_ratio_name}**")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -263,14 +212,8 @@ with pair1_col1:
             color="Chart_Area", color_continuous_scale="Greens",
             labels={"Chart_Area": "ขนาดพื้นที่ (ตร.ม.)", y_axis_col: y_label_text}
         )
-        fig_area.update_traces(textposition='outside', textfont=dict(color='#ffffff'))
-        # ปรับธีมฟอนต์ของกราฟให้เป็นสีขาวและโปร่งแสงเข้ากับ Dark Mode
-        fig_area.update_layout(
-            showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10),
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(tickfont=dict(color='#ffffff'), titlefont=dict(color='#ffffff'), gridcolor='rgba(255,255,255,0.05)'),
-            yaxis=dict(tickfont=dict(color='#ffffff'), titlefont=dict(color='#ffffff'))
-        )
+        fig_area.update_traces(textposition='outside')
+        fig_area.update_layout(showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10))
         st.plotly_chart(fig_area, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลพื้นที่")
@@ -285,18 +228,13 @@ with pair1_col2:
             color="Chart_Visitors", color_continuous_scale="Oranges",
             labels={"Chart_Visitors": "จำนวนผู้เข้าชม (คน/เดือน)", y_axis_col: y_label_text}
         )
-        fig_visitors.update_traces(textposition='outside', textfont=dict(color='#ffffff'))
-        fig_visitors.update_layout(
-            showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10),
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(tickfont=dict(color='#ffffff'), titlefont=dict(color='#ffffff'), gridcolor='rgba(255,255,255,0.05)'),
-            yaxis=dict(tickfont=dict(color='#ffffff'), titlefont=dict(color='#ffffff'))
-        )
+        fig_visitors.update_traces(textposition='outside')
+        fig_visitors.update_layout(showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10))
         st.plotly_chart(fig_visitors, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลผู้ใช้งาน")
 
-st.markdown("<hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+st.markdown("---")
 
 # ----------------------------------------------------------------------
 # 📊 คู่ที่ 2: อัตราส่วนแบกรับประชากร VS สัดส่วนสิ่งอำนวยความสะดวกแยกประเภท (2 Columns)
@@ -313,13 +251,8 @@ with pair2_col1:
             color="Chart_Ratio", color_continuous_scale="Purples",
             labels={"Chart_Ratio": "ดัชนีอัตราส่วน (เท่า)", y_axis_col: y_label_text}
         )
-        fig_ratio.update_traces(textposition='outside', textfont=dict(color='#ffffff'))
-        fig_ratio.update_layout(
-            showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10),
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)',
-            xaxis=dict(tickfont=dict(color='#ffffff'), titlefont=dict(color='#ffffff'), gridcolor='rgba(255,255,255,0.05)'),
-            yaxis=dict(tickfont=dict(color='#ffffff'), titlefont=dict(color='#ffffff'))
-        )
+        fig_ratio.update_traces(textposition='outside')
+        fig_ratio.update_layout(showlegend=False, coloraxis_showscale=False, height=360, margin=dict(l=100, r=50, t=10, b=10))
         st.plotly_chart(fig_ratio, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลดัชนี")
@@ -340,23 +273,22 @@ with pair2_col2:
             
         df_feature_pie = pd.DataFrame(feature_counts)
         
-        # กราฟโดนัทโทนสี Blue Gradient สว่างคมชัดบนพื้นหลังมืด
+        # แต่งสีใหม่เป็น Blue Gradient (ไล่เฉดน้ำเงิน-ฟ้า) ตามบรีฟ
         fig_donut = px.pie(
             df_feature_pie, values="จำนวนที่มีบริการ", names="สิ่งอำนวยความสะดวก", hole=0.5,
             color="สิ่งอำนวยความสะดวก",
             color_discrete_map={"ที่จอดรถ": "#1f77b4", "ทางจักรยาน": "#4ea8de", "มิตรกับสัตว์เลี้ยง": "#90e0ef"}
         )
-        fig_donut.update_traces(textposition='inside', textinfo='percent+value', textfont=dict(color='#ffffff'))
+        fig_donut.update_traces(textposition='inside', textinfo='percent+value')
         fig_donut.update_layout(
             height=360, margin=dict(l=20, r=20, t=10, b=10),
-            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5, font=dict(color="#ffffff")),
-            paper_bgcolor='rgba(0,0,0,0)', plot_bgcolor='rgba(0,0,0,0)'
+            legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
         )
         st.plotly_chart(fig_donut, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลสิ่งอำนวยความสะดวก")
 
-st.markdown("<hr style='border-color: rgba(255,255,255,0.1);'>", unsafe_allow_html=True)
+st.markdown("---")
 
 # ----------------------------------------------------------------------
 # 📋 ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด
