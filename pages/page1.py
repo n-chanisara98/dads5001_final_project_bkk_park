@@ -183,42 +183,28 @@ st.markdown("---")
 
 
 ### ส่วนที่ 3: NEW INTERPRETATION FOR PARK FEATURES (ปรับมุมมองการวิเคราะห์สิ่งอำนวยความสะดวก)
-st.subheader("🚲 วิเคราะห์ข้อจำกัดและสิ่งอำนวยความสะดวกในการเข้าใช้บริการ")
-st.markdown("""
-**วิเคราะห์ในแง่ใด?** ปรับวิธีคิดจากกราฟแยกแท่งธรรมดา มาเป็น **"สัดส่วนความพร้อมรวมของเมือง"** เพื่อตอบคำถามสำคัญทางนโยบายว่า *สวนส่วนใหญ่ในกรุงเทพฯ พร้อมรองรับพฤติกรรมความต้องการยุคใหม่ (เช่น การพาสัตว์เลี้ยงมาเดิน หรือการปั่นจักรยาน) มากน้อยแค่ไหน?*
-""")
+import plotly.graph_objects as go
 
-# จัดการแปลงรูปแบบข้อมูลเพื่อสร้างกราฟแท่งแบบสะสม (Stacked Bar Chart เปรียบเทียบสัดส่วน มี VS ไม่มี)
-features = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
-melted_records = []
+# 1. คำนวณร้อยละความพร้อมของแต่ละฟีเจอร์ (เช่น สวนที่มีที่จอดรถ คิดเป็นกี่ % ของสวนทั้งหมด)
+total_parks_count = len(df_park_filtered) if len(df_park_filtered) > 0 else 1
 
-for feat in features:
-    counts = df_park_filtered[feat].value_counts()
-    has_yes = counts.get("มี", 0)
-    has_no = counts.get("ไม่มี", 0)
-    melted_records.append({"Feature": feat, "Availability": "มีบริการ", "Count": has_yes})
-    melted_records.append({"Feature": feat, "Availability": "ไม่มีบริการ", "Count": has_no})
+pct_car = (df_park_filtered["ที่จอดรถ (Car Park)"] == "มี").sum() / total_parks_count * 100
+pct_pet = (df_park_filtered["มิตรกับสัตว์เลี้ยง (Pet Friendly)"] == "มี").sum() / total_parks_count * 100
+pct_bike = (df_park_filtered["อนุญาตให้ขี่จักรยาน (Bicycle Path)"] == "มี").sum() / total_parks_count * 100
 
-df_features_plot = pd.DataFrame(melted_records)
+# 2. สร้างกราฟเรดาร์
+fig_radar = go.Figure()
+fig_radar.add_trace(go.Scatterpolar(
+      r=[pct_car, pct_pet, pct_bike, pct_car], # ใส่ค่าแรกซ้ำตอนท้ายเพื่อปิดวงกลม
+      theta=['มีที่จอดรถ (%)', 'เป็น Pet Friendly (%)', 'ปั่นจักรยานได้ (%)', 'มีที่จอดรถ (%)'],
+      fill='toself',
+      fillcolor='rgba(46, 204, 113, 0.3)',
+      line=dict(color='#2ecc71', width=2)
+))
 
-# สร้าง Stacked Bar Chart เพื่อความเข้าใจง่ายในกราฟเดียว
-fig_features = px.bar(
-    df_features_plot,
-    x="Count",
-    y="Feature",
-    color="Availability",
-    orientation='h',
-    text="Count",
-    color_discrete_map={"มีบริการ": "#2ecc71", "ไม่มีบริการ": "#e74c3c"},
-    labels={"Count": "จำนวนสวนสาธารณะ (แห่ง)", "Feature": "ประเภทสิ่งอำนวยความสะดวก", "Availability": "สถานะ"}
+fig_radar.update_layout(
+  polar=dict(radialaxis=dict(visible=True, range=[0, 100])),
+  showlegend=False,
+  height=350
 )
-fig_features.update_layout(
-    barmode="stack",
-    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-    height=350
-)
-st.plotly_chart(fig_features, use_container_width=True)
-
-# แสดงตารางตาม Filter เผื่อใช้ตรวจสอบเจาะลึก
-if st.checkbox("แสดงรายชื่อสวนสาธารณะที่กรองตามเงื่อนไขปัจจุบัน"):
-    st.dataframe(df_park_filtered[["Park_Name", "District"] + features], use_container_width=True, hide_index=True)
+st.plotly_chart(fig_radar, use_container_width=True)
