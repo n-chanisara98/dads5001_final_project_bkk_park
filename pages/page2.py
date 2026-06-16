@@ -109,7 +109,15 @@ df_ll.columns = [c.upper().strip() for c in df_ll.columns]
 df_d.columns = [c.upper().strip() for c in df_d.columns]
 df_trains.columns = [c.upper().strip() for c in df_trains.columns]
 
+# DEBUG
+st.write("df_p columns")
+st.write(df_p.columns)
 
+st.write("df_ll columns")
+st.write(df_ll.columns)
+
+st.write("df_d columns")
+st.write(df_d.columns)
 
 
 # =====================================================================
