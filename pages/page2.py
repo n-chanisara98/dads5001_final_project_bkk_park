@@ -118,23 +118,29 @@ df_trains.columns = [c.upper().strip() for c in df_trains.columns]
 
 duck_conn = duckdb.connect(database=':memory:')
 
+duck_conn.register("park", df_p)
+duck_conn.register("park_ll", df_ll)
+duck_conn.register("park_dist", df_d)
+
 df_parks_merged = duck_conn.execute("""
-    SELECT 
-        p.NAME, 
-        p.OPEN, 
-        p.CLOSE, 
-        p.TOILET, 
-        p.SPORTS_FIELD, 
-        p.RUNNING_TRACK, 
-        p.CAR_PARK, 
-        p.BICYCLE_PATH, 
-        p.PET_FRIENDLY,
-        ll.LAT,
-        ll.LNG,
-        COALESCE(d.RUN_M, 0) AS RUN_M
-    FROM df_p p
-    INNER JOIN df_ll ll ON p.NAME = ll.PARK_NAME
-    LEFT JOIN df_d d ON p.NAME = d.PARK_NAME
+SELECT
+    p.NAME,
+    p.OPEN,
+    p.CLOSE,
+    p.TOILET,
+    p.SPORTS_FIELD,
+    p.RUNNING_TRACK,
+    p.CAR_PARK,
+    p.BICYCLE_PATH,
+    p.PET_FRIENDLY,
+    ll.LAT,
+    ll.LNG,
+    COALESCE(d.RUN_M,0) AS RUN_M
+FROM park p
+INNER JOIN park_ll ll
+    ON p.NAME = ll.PARK_NAME
+LEFT JOIN park_dist d
+    ON p.NAME = d.PARK_NAME
 """).df()
 
 # =====================================================================
