@@ -104,18 +104,33 @@ def load_snowflake_data():
 df_stations_pm25 = refresh_and_get_pm25()
 df_p, df_ll, df_d, df_trains = load_snowflake_data()
 
+df_p.columns = [c.upper().strip() for c in df_p.columns]
+df_ll.columns = [c.upper().strip() for c in df_ll.columns]
+df_d.columns = [c.upper().strip() for c in df_d.columns]
+df_trains.columns = [c.upper().strip() for c in df_trains.columns]
+
+
+
+
 # =====================================================================
 # 3. 🔥 DUCKDB INTEGRATION: MERGING DATA WITH SQL (เวอร์ชันเคลียร์พิมพ์ใหญ่)
 # =====================================================================
 
 duck_conn = duckdb.connect(database=':memory:')
 
-# ปรับชื่อคอลัมน์ข้างใน SELECT และเงื่อนไข ON ให้เป็นตัวพิมพ์ใหญ่ตาม Snowflake เป๊ะๆ
 df_parks_merged = duck_conn.execute("""
     SELECT 
-        p.*, 
-        ll.LAT, 
-        ll.LNG, 
+        p.NAME, 
+        p.OPEN, 
+        p.CLOSE, 
+        p.TOILET, 
+        p.SPORTS_FIELD, 
+        p.RUNNING_TRACK, 
+        p.CAR_PARK, 
+        p.BICYCLE_PATH, 
+        p.PET_FRIENDLY,
+        ll.LAT,
+        ll.LNG,
         COALESCE(d.RUN_M, 0) AS RUN_M
     FROM df_p p
     INNER JOIN df_ll ll ON p.NAME = ll.PARK_NAME
