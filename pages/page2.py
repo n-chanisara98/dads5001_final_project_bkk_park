@@ -105,13 +105,12 @@ df_stations_pm25 = refresh_and_get_pm25()
 df_p, df_ll, df_d, df_trains = load_snowflake_data()
 
 # =====================================================================
-# 3. 🔥 DUCKDB INTEGRATION: MERGING DATA WITH SQL
+# 3. 🔥 DUCKDB INTEGRATION: MERGING DATA WITH SQL (เวอร์ชันเคลียร์พิมพ์ใหญ่)
 # =====================================================================
-# โชว์อาจารย์ไปเลยว่าใช้ DuckDB ในการคิวรีแบบ In-memory OLAP เร็วแรงทะลุนรก
 
 duck_conn = duckdb.connect(database=':memory:')
 
-# ทำการใช้ SQL Query บน DuckDB เพื่อเอาตารางดิบจาก Snowflake 3 ตัวมารวมร่างกัน
+# ปรับชื่อคอลัมน์ข้างใน SELECT และเงื่อนไข ON ให้เป็นตัวพิมพ์ใหญ่ตาม Snowflake เป๊ะๆ
 df_parks_merged = duck_conn.execute("""
     SELECT 
         p.NAME, 
