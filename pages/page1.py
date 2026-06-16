@@ -169,58 +169,90 @@ with chart_col2:
 st.markdown("---")
 
 ### ส่วนที่ 3: PARK FEATURES
-st.markdown("### 🚲 วิเคราะห์ข้อจำกัดและสิ่งอำนวยความสะดวกในการเข้าใช้บริการ")
+st.markdown("### 🗺️ วิเคราะห์ศักยภาพและความครบเครื่องของสิ่งอำนวยความสะดวก")
 
+# 1. คำนวณคะแนนความพร้อม (Readiness Score) ให้สวนแต่ละแห่ง
+# มี = 1 คะแนน, ไม่มี = 0 คะแนน
+df_readiness = df_park_filtered.copy()
 features = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
-melted_records = []
+
+# แปลงค่า มี/ไม่มี เป็นคะแนน 1/0
 for feat in features:
-    counts = df_park_filtered[feat].value_counts().reindex(["มี", "ไม่มี"], fill_value=0)
-    melted_records.append({"Feature": feat, "Availability": "มีบริการ", "Count": counts["มี"]})
-    melted_records.append({"Feature": feat, "Availability": "ไม่มีบริการ", "Count": counts["ไม่มี"]})
+    df_readiness[feat + "_Score"] = df_readiness[feat].apply(lambda x: 1 if x == "มี" else 0)
 
-df_features_plot = pd.DataFrame(melted_records)
+# รวมคะแนนของสวนแต่ละแห่ง (คะแนนเต็ม 3)
+score_cols = [f + "_Score" for f in features]
+df_readiness["Total_Score"] = df_readiness[score_cols].sum(axis=1)
 
-# สร้าง Stacked Bar Chart
-fig_features = px.bar(
-    df_features_plot, 
-    x="Count", 
-    y="Feature", 
-    color="Availability", 
-    orientation='h', 
-    text="Count", 
-    color_discrete_map={"มีบริการ": "#2ecc71", "ไม่มีบริการ": "#e74c3c"},
-    labels={"Count": "จำนวนสวน (แห่ง)", "Feature": "สิ่งอำนวยความสะดวก"}
+# จัดกลุ่มระดับความครบเครื่องของสวน
+def classify_park(score):
+    if score == 3:
+        return "🥇 สวนพรีเมียม (มีครบ 3 ฟีเจอร์)"
+    elif score >= 1:
+        return "🥈 สวนมาตรฐาน (มี 1-2 ฟีเจอร์)"
+    else:
+        return "🥉 สวนพื้นฐาน (เน้นเดิน/วิ่งอย่างเดียว)"
+
+df_readiness["Park_Class"] = df_readiness["Total_Score"].apply(classify_park)
+
+# นับจำนวนสวนในแต่ละกลุ่ม
+df_class_counts = df_readiness["Park_Class"].value_counts().reset_index()
+df_class_counts.columns = ["ระดับความพร้อม", "จำนวนสวน (แห่ง)"]
+
+# 2. วาดกราฟ Donut Chart แสดงสัดส่วนความครบเครื่อง
+fig_donut = px.pie(
+    df_class_counts, 
+    values="จำนวนสวน (แห่ง)", 
+    names="ระดับความพร้อม", 
+    hole=0.5,
+    color="ระดับความพร้อม",
+    color_discrete_map={
+        "🥇 สวนพรีเมียม (มีครบ 3 ฟีเจอร์)": "#2ecc71",
+        "🥈 สวนมาตรฐาน (มี 1-2 ฟีเจอร์)": "#f1c40f",
+        "🥉 สวนพื้นฐาน (เน้นเดิน/วิ่งอย่างเดียว)": "#e74c3c"
+    }
 )
-fig_features.update_layout(
-    barmode="stack", 
-    legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1), 
-    height=280,
-    margin=dict(l=50, r=50, t=20, b=20)
+fig_donut.update_traces(textposition='inside', textinfo='percent+value')
+fig_donut.update_layout(
+    legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5),
+    height=350,
+    margin=dict(l=20, r=20, t=20, b=50)
 )
-st.plotly_chart(fig_features, use_container_width=True)
 
-# ----------------------------------------------------------------------
-# 🎯 เพิ่มส่วนวิเคราะห์คำแนะนำเชิงนโยบาย (Urban Insights Case)
-# ----------------------------------------------------------------------
-st.markdown("🔍 **บทวิเคราะห์ความพร้อมของเมือง (Urban Infrastructure Insights):**")
+# แบ่งหน้าจอแสดงผล: ซ้ายเป็นกราฟ ขวาเป็นสรุปความเข้าใจง่าย
+col_chart, col_text = st.columns([1.2, 1])
 
-# คำนวณสถิติเพื่อนำมาเขียนบทวิเคราะห์แบบอัตโนมัติ
-total_parks_current = len(df_park_filtered)
-if total_parks_current > 0:
-    no_car_park = df_park_filtered["ที่จอดรถ (Car Park)"].value_counts().get("ไม่มี", 0)
-    no_pet = df_park_filtered["มิตรกับสัตว์เลี้ยง (Pet Friendly)"].value_counts().get("ไม่มี", 0)
+with col_chart:
+    st.plotly_chart(fig_donut, use_container_width=True)
+
+with col_text:
+    st.markdown("🎯 **สรุปภาพรวมสิ่งอำนวยความสะดวก:**")
     
-    pct_no_car = (no_car_park / total_parks_current) * 100
-    pct_no_pet = (no_pet / total_parks_current) * 100
-
-    # แสดงผลการวิเคราะห์เป็นข้อๆ ด้วย Expander หรือ Container สวยๆ
+    # คำนวณตัวเลขไปแสดงในข้อความสรุป
+    total_current = len(df_readiness)
+    premium_count = len(df_readiness[df_readiness["Total_Score"] == 3])
+    basic_count = len(df_readiness[df_readiness["Total_Score"] == 0])
+    
     with st.container(border=True):
         st.markdown(f"""
-        * **⚠️ ข้อจำกัดการเดินทาง (Accessibility Barrier):** สวนในพื้นที่ที่เลือกกว่า **{pct_no_car:.1f}% ไม่มีที่จอดรถ** สะท้อนว่าสวนเหล่านี้ออกแบบมาเพื่อรองรับกลุ่มคนในระยะเดินเท้า (Hyper-local) เป็นหลัก หากเมืองต้องการดึงดูดผู้ใช้นอกพื้นที่ จำเป็นต้องพึ่งพาระบบขนส่งสาธารณะเชื่อมต่อรอบสวน
-        * **🐾 ความขัดแย้งเชิงไลฟ์สไตล์ (Modern Lifestyle Mismatch):** มีสวนเพียงไม่กี่แห่งเท่านั้นที่เป็นมิตรกับสัตว์เลี้ยง (สวนส่วนใหญ่ **{pct_no_pet:.1f}% ยังไม่อนุญาต**) แสดงถึงช่องว่างขนาดใหญ่ (Gap) ระหว่างกฎระเบียบของสวนยุคเก่า กับเทรนด์ของคนเมืองยุคใหม่ที่นิยมเลี้ยงสัตว์เลี้ยงแทนลูก (Pet Humanization)
-        * **💡 ข้อเสนอแนะเชิงนโยบาย:** กทม. ควรเปลี่ยนผ่านจากการสร้างสวนใหม่ ไปสู่การ **'Retrofit' (ปรับปรุงระเบียบและพื้นที่สวนเดิม)** ให้สามารถรองรับกิจกรรมที่หลากหลายขึ้น โดยไม่จำเป็นต้องใช้งบประมาณมหาศาลในการเวนคืนที่ดินเพื่อสร้างสวนใหม่
+        * **ความหลากหลายของกิจกรรม:** จากสวนทั้งหมด **{total_current} แห่ง** พบว่ามีสวนระดับพรีเมียมที่มีบริการครบวงจร (จอดรถ + สัตว์เลี้ยง + จักรยาน) อยู่เพียง **{premium_count} แห่ง** เท่านั้น
+        * **ประเภทสวนหลักของเมือง:** สวนส่วนใหญ่ในพื้นที่นี้จัดอยู่ในกลุ่มสีกราฟที่หนาแน่นที่สุด ซึ่งสะท้อนไลฟ์สไตล์หลักที่สวนสาธารณะแห่งนี้รองรับในปัจจุบัน
+        * **ฟีเจอร์ที่หาได้ยากที่สุด (Rare Feature):** 
+          * มีสวนที่เป็น Pet Friendly เพียง **{len(df_readiness[df_readiness["มิตรกับสัตว์เลี้ยง (Pet Friendly)"]=='มี'])} แห่ง**
+          * มีสวนที่มีทางจักรยานเพียง **{len(df_readiness[df_readiness["อนุญาตให้ขี่จักรยาน (Bicycle Path)"]=='มี'])} แห่ง**
         """)
-else:
-    st.caption("ไม่มีข้อมูลสำหรับวิเคราะห์ในตัวกรองนี้")
 
 st.markdown("---")
+
+
+
+### 📋 ตารางข้อมูลสวนสาธารณะตามเงื่อนไขตัวกรองปัจจุบัน (แสดงครบถ้วนและ Real-time)
+st.markdown("### 📋 รายชื่อและรายละเอียดของสวนสาธารณะทั้งหมด")
+if not df_park_filtered.empty:
+    st.dataframe(
+        df_park_filtered[["Park_Name", "District"] + features], 
+        use_container_width=True, 
+        hide_index=True
+    )
+else:
+    st.warning("⚠️ ไม่พบข้อมูลสวนสาธารณะตามเงื่อนไขตัวกรองที่คุณเลือกในปัจจุบัน")
