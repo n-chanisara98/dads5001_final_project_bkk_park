@@ -124,7 +124,9 @@ duck_conn.register("park_dist", df_d)
 
 df_parks_merged = duck_conn.execute("""
 SELECT *
-FROM park
+FROM park p
+INNER JOIN park_ll ll
+ON p.NAME = ll.PARK_NAME
 LIMIT 5
 """).df()
 
