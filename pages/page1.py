@@ -249,6 +249,8 @@ if not df_chart_data.empty:
 st.markdown("---")
 
 ### ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด (Export Data Function)
+# ----------------------------------------------------------------------
+
 table_col, download_col = st.columns([4, 1])
 with table_col:
     st.markdown("### 📋 ตารางสถิติและรายละเอียดสิ่งอำนวยความสะดวกของสวนสาธารณะ")
@@ -260,12 +262,12 @@ if not df_park_filtered.empty:
     
     with download_col:
         st.markdown("<br>", unsafe_allow_html=True)
-        # แปลงไฟล์เป็น CSV เพื่อให้พร้อมดาวน์โหลด
+        # แปลงไฟล์เป็น CSV เพื่อให้พร้อมดาวน์โหลด (รองรับภาษาไทยด้วย utf-8-sig)
         csv_data = df_table_show.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
             label="📥 ดาวน์โหลดไฟล์ข้อมูล (CSV)",
             data=csv_data,
-            fileName="bkk_park_filtered_data.csv",
+            file_name="bkk_park_filtered_data.csv",  # แก้ไขจาก fileName เป็น file_name แล้ว
             mime="text/csv",
             use_container_width=True
         )
