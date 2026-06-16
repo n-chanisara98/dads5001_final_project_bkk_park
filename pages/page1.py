@@ -106,7 +106,7 @@ st.markdown("""
         font-weight: bold;
     }
 </style>
-""", unsafe_unsafe_rendering=True)
+""", unsafe_allow_html=True)
 
 col1, col2, col3 = st.columns(3)
 
