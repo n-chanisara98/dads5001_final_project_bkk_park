@@ -239,6 +239,7 @@ FROM parks
 WHERE {' AND '.join(where_clauses)}
 """
 
+st.write(query_string)
 # สั่งคิวรีผลลัพธ์ผ่าน DuckDB ดึงผลลัพธ์สุดท้ายออกมาใช้งาน
 df_filtered = duck_conn.execute(query_string).df()
 
