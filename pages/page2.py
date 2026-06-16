@@ -123,14 +123,26 @@ duck_conn.register("park_dist", df_d)
 
 
 df_parks_merged = duck_conn.execute("""
-SELECT *
+SELECT
+    p.NAME,
+    p.OPEN,
+    p.CLOSE,
+    p.TOILET,
+    p.SPORTS_FIELD,
+    p.RUNNING_TRACK,
+    p.CAR_PARK,
+    p.BICYCLE_PATH,
+    p.PET_FRIENDLY,
+    ll.LAT,
+    ll.LNG,
+    COALESCE(d.RUN_M,0) AS RUN_M
 FROM park p
 INNER JOIN park_ll ll
-ON p.NAME = ll.PARK_NAME
-LIMIT 5
+    ON p.NAME = ll.PARK_NAME
+LEFT JOIN park_dist d
+    ON p.NAME = d.PARK_NAME
 """).df()
 
-st.write(df_parks_merged)
 
 duck_conn.register("parks", df_parks_merged)
 
@@ -239,7 +251,7 @@ FROM parks
 WHERE {' AND '.join(where_clauses)}
 """
 
-st.write(query_string)
+
 # สั่งคิวรีผลลัพธ์ผ่าน DuckDB ดึงผลลัพธ์สุดท้ายออกมาใช้งาน
 df_filtered = duck_conn.execute(query_string).df()
 
