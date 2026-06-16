@@ -170,6 +170,7 @@ st.markdown("---")
 
 ### ส่วนที่ 3: PARK FEATURES
 st.markdown("### 🚲 วิเคราะห์ข้อจำกัดและสิ่งอำนวยความสะดวกในการเข้าใช้บริการ")
+
 features = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
 melted_records = []
 for feat in features:
@@ -178,40 +179,48 @@ for feat in features:
     melted_records.append({"Feature": feat, "Availability": "ไม่มีบริการ", "Count": counts["ไม่มี"]})
 
 df_features_plot = pd.DataFrame(melted_records)
-fig_features = px.bar(df_features_plot, x="Count", y="Feature", color="Availability", orientation='h', text="Count", color_discrete_map={"มีบริการ": "#2ecc71", "ไม่มีบริการ": "#e74c3c"})
-fig_features.update_layout(barmode="stack", legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1), height=280)
+
+# สร้าง Stacked Bar Chart
+fig_features = px.bar(
+    df_features_plot, 
+    x="Count", 
+    y="Feature", 
+    color="Availability", 
+    orientation='h', 
+    text="Count", 
+    color_discrete_map={"มีบริการ": "#2ecc71", "ไม่มีบริการ": "#e74c3c"},
+    labels={"Count": "จำนวนสวน (แห่ง)", "Feature": "สิ่งอำนวยความสะดวก"}
+)
+fig_features.update_layout(
+    barmode="stack", 
+    legend=dict(orientation="h", yanchor="bottom", y=1.05, xanchor="right", x=1), 
+    height=280,
+    margin=dict(l=50, r=50, t=20, b=20)
+)
 st.plotly_chart(fig_features, use_container_width=True)
 
-st.markdown("---")
+# ----------------------------------------------------------------------
+# 🎯 เพิ่มส่วนวิเคราะห์คำแนะนำเชิงนโยบาย (Urban Insights Case)
+# ----------------------------------------------------------------------
+st.markdown("🔍 **บทวิเคราะห์ความพร้อมของเมือง (Urban Infrastructure Insights):**")
 
-### ส่วนที่ 4: (ปรับปรุงใหม่ตามโจทย์) การวิเคราะห์พฤติกรรมการแบกรับภาระของสวนสาธารณะ (Park Traffic Load Analytics)
-st.markdown("### 📈 ส่วนที่ 4: การวิเคราะห์ปริมาณการแบกรับภาระผู้ใช้งานเฉลี่ยต่อหนึ่งสวน")
-st.info("💡 **การวิเคราะห์พฤติกรรมเมือง:** กราฟนี้แสดงจำนวนผู้ใช้งานเฉลี่ยต่อเดือน 'ต่อหนึ่งสวน' ในเขตนั้นๆ เขตที่มีค่าสูง (แท่งยาว) สะท้อนพฤติกรรมคนล้นสวน สวนต้องแบกรับภาระการเสื่อมสภาพสูง ซึ่งเมืองควรจัดสรรงบประมาณซ่อมบำรุงและดูแลความปลอดภัยเพิ่มขึ้น")
+# คำนวณสถิติเพื่อนำมาเขียนบทวิเคราะห์แบบอัตโนมัติ
+total_parks_current = len(df_park_filtered)
+if total_parks_current > 0:
+    no_car_park = df_park_filtered["ที่จอดรถ (Car Park)"].value_counts().get("ไม่มี", 0)
+    no_pet = df_park_filtered["มิตรกับสัตว์เลี้ยง (Pet Friendly)"].value_counts().get("ไม่มี", 0)
+    
+    pct_no_car = (no_car_park / total_parks_current) * 100
+    pct_no_pet = (no_pet / total_parks_current) * 100
 
-df_sorted_load = df_dist_filtered.sort_values(by="Traffic_per_Park", ascending=True)
-fig_load = px.bar(
-    df_sorted_load,
-    x="Traffic_per_Park",
-    y="District",
-    orientation='h',
-    text=df_sorted_load["Traffic_per_Park"].apply(lambda x: f" {x:,.0f} คน/สวน/เดือน"),
-    color="Traffic_per_Park",
-    color_continuous_scale="Purples",
-    labels={"Traffic_per_Park": "ผู้ใช้งานเฉลี่ย (คน/สวน/เดือน)", "District": "เขต"}
-)
-fig_load.update_traces(textposition='outside')
-fig_load.update_layout(showlegend=False, coloraxis_showscale=False, height=350, margin=dict(l=50, r=50, t=10, b=10))
-st.plotly_chart(fig_load, use_container_width=True)
-
-st.markdown("---")
-
-### 📋 ตารางข้อมูลสวนสาธารณะตามเงื่อนไขตัวกรองปัจจุบัน (แสดงครบถ้วนและ Real-time)
-st.markdown("### 📋 รายชื่อและรายละเอียดของสวนสาธารณะทั้งหมด")
-if not df_park_filtered.empty:
-    st.dataframe(
-        df_park_filtered[["Park_Name", "District"] + features], 
-        use_container_width=True, 
-        hide_index=True
-    )
+    # แสดงผลการวิเคราะห์เป็นข้อๆ ด้วย Expander หรือ Container สวยๆ
+    with st.container(border=True):
+        st.markdown(f"""
+        * **⚠️ ข้อจำกัดการเดินทาง (Accessibility Barrier):** สวนในพื้นที่ที่เลือกกว่า **{pct_no_car:.1f}% ไม่มีที่จอดรถ** สะท้อนว่าสวนเหล่านี้ออกแบบมาเพื่อรองรับกลุ่มคนในระยะเดินเท้า (Hyper-local) เป็นหลัก หากเมืองต้องการดึงดูดผู้ใช้นอกพื้นที่ จำเป็นต้องพึ่งพาระบบขนส่งสาธารณะเชื่อมต่อรอบสวน
+        * **🐾 ความขัดแย้งเชิงไลฟ์สไตล์ (Modern Lifestyle Mismatch):** มีสวนเพียงไม่กี่แห่งเท่านั้นที่เป็นมิตรกับสัตว์เลี้ยง (สวนส่วนใหญ่ **{pct_no_pet:.1f}% ยังไม่อนุญาต**) แสดงถึงช่องว่างขนาดใหญ่ (Gap) ระหว่างกฎระเบียบของสวนยุคเก่า กับเทรนด์ของคนเมืองยุคใหม่ที่นิยมเลี้ยงสัตว์เลี้ยงแทนลูก (Pet Humanization)
+        * **💡 ข้อเสนอแนะเชิงนโยบาย:** กทม. ควรเปลี่ยนผ่านจากการสร้างสวนใหม่ ไปสู่การ **'Retrofit' (ปรับปรุงระเบียบและพื้นที่สวนเดิม)** ให้สามารถรองรับกิจกรรมที่หลากหลายขึ้น โดยไม่จำเป็นต้องใช้งบประมาณมหาศาลในการเวนคืนที่ดินเพื่อสร้างสวนใหม่
+        """)
 else:
-    st.warning("⚠️ ไม่พบข้อมูลสวนสาธารณะตามเงื่อนไขตัวกรองที่คุณเลือกในปัจจุบัน")
+    st.caption("ไม่มีข้อมูลสำหรับวิเคราะห์ในตัวกรองนี้")
+
+st.markdown("---")
