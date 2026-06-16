@@ -37,7 +37,7 @@ def load_data():
             "ปทุมวัน", "ปทุมวัน", "ปทุมวัน",
             "ราชเทวี", "ราชเทวี",
             "คลองเตย", "คลองเตย", "คลองเตย", "คลองเตย",
-            "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน",
+            "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "บางขุนเทียน", "滿足ขุนเทียน",
             "ลาดกระบัง", "ลาดกระบัง", "ลาดกระบัง", "ลาดกระบัง", "ลาดกระบัง",
             "พระนคร", "พระนคร",
             "ห้วยขวาง",
@@ -159,7 +159,7 @@ bkk_green_per_capita = total_green_area / total_pop if total_pop > 0 else 0
 total_parks = len(df_park_filtered)
 
 # ----------------------------------------------------------------------
-# 4. DASHBOARD UI & VISUALIZATION (แสดงผลจับคู่ทีละ 2 กราฟพร้อมสรุป)
+# 4. DASHBOARD UI & VISUALIZATION (รวมสรุปจุดสำคัญที่สุดไว้ด้านบนอันเดียว)
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
 st.markdown("วิเคราะห์ภาพรวมขนาดพื้นที่ พฤติกรรมการใช้งาน และความพร้อมสอดคล้องเชิงสันทนาการ")
@@ -182,6 +182,18 @@ with col2:
 with col3:
     status_color = "#e74c3c" if bkk_green_per_capita < 9 else "#2ecc71"
     st.markdown(f'<div class="kpi-card" style="border-left-color: {status_color};"><div class="kpi-label">👤 พื้นที่สีเขียวต่อหัวประชากร</div><div class="kpi-value">{bkk_green_per_capita:.2f} <span style="font-size:16px; font-weight:normal;">ตร.ม./คน</span></div></div>', unsafe_allow_html=True)
+
+# [กล่องสรุปจุดสำคัญที่สุดเพียงหนึ่งเดียว ไว้ด้านบนสุด]
+if not df_chart_data.empty:
+    max_area_name = df_chart_data.loc[df_chart_data["Chart_Area"].idxmax()][y_axis_col]
+    max_visit_name = df_chart_data.loc[df_chart_data["Chart_Visitors"].idxmax()][y_axis_col]
+    max_ratio_name = df_chart_data.loc[df_chart_data["Chart_Ratio"].idxmax()][y_axis_col]
+    
+    with st.container(border=True):
+        st.markdown(f"💡 **จุดสำคัญที่สุดเชิงสถิติ:** "
+                    f"🟢 พื้นที่ใหญ่ที่สุด: **{max_area_name}** | "
+                    f"👥 ผู้ใช้งานจริงต่อเดือนสูงสุด: **{max_visit_name}** | "
+                    f"📈 แบกรับภาระต่อประชากรสูงสุด: **{max_ratio_name}**")
 
 st.markdown("<br>", unsafe_allow_html=True)
 
@@ -222,15 +234,6 @@ with pair1_col2:
     else:
         st.info("ไม่พบข้อมูลผู้ใช้งาน")
 
-# [เพิ่มสรุปจุดสำคัญ คู่ที่ 1]
-if not df_chart_data.empty:
-    max_area_name = df_chart_data.loc[df_chart_data["Chart_Area"].idxmax()][y_axis_col]
-    max_visit_name = df_chart_data.loc[df_chart_data["Chart_Visitors"].idxmax()][y_axis_col]
-    st.markdown(f"""
-    > 💡 **สรุปจุดสำคัญ (พื้นที่ vs ผู้ใช้งาน):** ภายใต้เงื่อนไขปัจจุบัน แหล่งที่มีขนาดพื้นที่ทางกายภาพกว้างขวางที่สุดคือ **{max_area_name}** 
-    > ในขณะที่ศูนย์รวมที่มีแรงดึงดูดผู้เข้าใช้งานจริงสูงที่สุดต่อเดือนคือ **{max_visit_name}** ซึ่งสะท้อนความหนาแน่นที่ต้องได้รับการบริหารจัดการทางพฤติกรรมเมืองเป็นพิเศษ
-    """)
-
 st.markdown("---")
 
 # ----------------------------------------------------------------------
@@ -257,7 +260,6 @@ with pair2_col1:
 with pair2_col2:
     st.markdown(f"##### 🍩 สัดส่วนความพร้อมแยกตามประเภทสิ่งอำนวยความสะดวก")
     if not df_park_filtered.empty:
-        # คำนวณสับสัดส่วนแบบแจกแจงทีละฟีเจอร์ตามบรีฟใหม่
         features_map = {
             "ที่จอดรถ (Car Park)": "ที่จอดรถ",
             "มิตรกับสัตว์เลี้ยง (Pet Friendly)": "มิตรกับสัตว์เลี้ยง",
@@ -271,10 +273,11 @@ with pair2_col2:
             
         df_feature_pie = pd.DataFrame(feature_counts)
         
+        # แต่งสีใหม่เป็น Blue Gradient (ไล่เฉดน้ำเงิน-ฟ้า) ตามบรีฟ
         fig_donut = px.pie(
             df_feature_pie, values="จำนวนที่มีบริการ", names="สิ่งอำนวยความสะดวก", hole=0.5,
             color="สิ่งอำนวยความสะดวก",
-            color_discrete_map={"ที่จอดรถ": "#3498db", "มิตรกับสัตว์เลี้ยง": "#e67e22", "ทางจักรยาน": "#9b59b6"}
+            color_discrete_map={"ที่จอดรถ": "#1f77b4", "ทางจักรยาน": "#4ea8de", "มิตรกับสัตว์เลี้ยง": "#90e0ef"}
         )
         fig_donut.update_traces(textposition='inside', textinfo='percent+value')
         fig_donut.update_layout(
@@ -284,18 +287,6 @@ with pair2_col2:
         st.plotly_chart(fig_donut, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลสิ่งอำนวยความสะดวก")
-
-# [เพิ่มสรุปจุดสำคัญ คู่ที่ 2]
-if not df_park_filtered.empty:
-    max_ratio_name = df_chart_data.loc[df_chart_data["Chart_Ratio"].idxmax()][y_axis_col]
-    total_pet = df_park_filtered["มิตรกับสัตว์เลี้ยง (Pet Friendly)"].value_counts().get("มี", 0)
-    total_bike = df_park_filtered["อนุญาตให้ขี่จักรยาน (Bicycle Path)"].value_counts().get("มี", 0)
-    total_car = df_park_filtered["ที่จอดรถ (Car Park)"].value_counts().get("มี", 0)
-    
-    st.markdown(f"""
-    > 💡 **สรุปจุดสำคัญ (ภาระแบกรับ vs ความพร้อมบริการ):** แหล่งที่มีสัดส่วนผู้ใช้บริการแบกรับภาระหนักที่สุดเมื่อเทียบกับฐานประชากรคือ **{max_ratio_name}** 
-    > ขณะที่การแจกแจงสิ่งอำนวยความสะดวกพบว่า ในบรรดาสวนทั้งหมดมีบริการ **ที่จอดรถ {total_car} แห่ง**, **ทางจักรยาน {total_bike} แห่ง** และ **มิตรกับสัตว์เลี้ยง {total_pet} แห่ง** ตามลำดับ ชี้ให้เห็นฟีเจอร์ที่ยังคงขาดแคลนในพื้นที่
-    """)
 
 st.markdown("---")
 
