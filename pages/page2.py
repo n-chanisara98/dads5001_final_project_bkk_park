@@ -109,15 +109,6 @@ df_ll.columns = [c.upper().strip() for c in df_ll.columns]
 df_d.columns = [c.upper().strip() for c in df_d.columns]
 df_trains.columns = [c.upper().strip() for c in df_trains.columns]
 
-# DEBUG
-st.write("df_p columns")
-st.write(df_p.columns)
-
-st.write("df_ll columns")
-st.write(df_ll.columns)
-
-st.write("df_d columns")
-st.write(df_d.columns)
 
 
 # =====================================================================
@@ -130,32 +121,18 @@ duck_conn.register("park", df_p)
 duck_conn.register("park_ll", df_ll)
 duck_conn.register("park_dist", df_d)
 
-st.write(df_p.head())
-st.write(df_ll.head())
-st.write(df_d.head())
 
-'''df_parks_merged = duck_conn.execute("""
-SELECT
-    p.NAME,
-    p.OPEN,
-    p.CLOSE,
-    p.TOILET,
-    p.SPORTS_FIELD,
-    p.RUNNING_TRACK,
-    p.CAR_PARK,
-    p.BICYCLE_PATH,
-    p.PET_FRIENDLY,
-    ll.LAT,
-    ll.LNG,
-    COALESCE(d.RUN_M,0) AS RUN_M
-FROM park p
-INNER JOIN park_ll ll
-    ON p.NAME = ll.PARK_NAME
-LEFT JOIN park_dist d
-    ON p.NAME = d.PARK_NAME
-""").df()'''
+df_parks_merged = duck_conn.execute("""
+SELECT *
+FROM park
+LIMIT 5
+""").df()
+
+st.write(df_parks_merged)
 
 duck_conn.register("parks", df_parks_merged)
+
+
 
 # =====================================================================
 # 4. GEOSPATIAL CALCULATIONS (จับคู่พิกัดหา ฝุ่นที่ใกล้สุด & รถไฟฟ้าที่ใกล้สุด)
