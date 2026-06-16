@@ -113,18 +113,10 @@ duck_conn = duckdb.connect(database=':memory:')
 # ปรับชื่อคอลัมน์ข้างใน SELECT และเงื่อนไข ON ให้เป็นตัวพิมพ์ใหญ่ตาม Snowflake เป๊ะๆ
 df_parks_merged = duck_conn.execute("""
     SELECT 
-        p.NAME, 
-        p.OPEN, 
-        p.CLOSE, 
-        p.TOILET, 
-        p.SPORTS_FIELD, 
-        p.RUNNING_TRACK, 
-        p.CAR_PARK, 
-        p.BICYCLE_PATH, 
-        p.PET_FRIENDLY,
-        ll.LAT,
-        ll.LNG,
-        COALESCE(d.RUN_M, 0) as RUN_M
+        p.*, 
+        ll.LAT, 
+        ll.LNG, 
+        COALESCE(d.RUN_M, 0) AS RUN_M
     FROM df_p p
     INNER JOIN df_ll ll ON p.NAME = ll.PARK_NAME
     LEFT JOIN df_d d ON p.NAME = d.PARK_NAME
