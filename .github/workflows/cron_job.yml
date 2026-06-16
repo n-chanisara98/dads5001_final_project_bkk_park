@@ -1,6 +1,6 @@
 name: Air4Thai PM2.5 Data Crawler
 
-on:
+'on':
   schedule:
     # ตั้งเวลาให้บอทตื่นมารันออโต้ทุกนาทีที่ 5 ของทุกชั่วโมง
     - cron: '5 * * * *'
