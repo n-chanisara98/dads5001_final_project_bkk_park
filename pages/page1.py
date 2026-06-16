@@ -94,9 +94,6 @@ df_district, df_parks = load_data()
 # ----------------------------------------------------------------------
 st.sidebar.markdown("### 🔍 ตัวกรองข้อมูล (Filters)")
 
-if "reset_clicked" not in st.session_state:
-    st.session_state.reset_clicked = False
-
 def reset_filters():
     st.session_state.sel_dist = "ทั้งหมด"
     st.session_state.chk_pet = False
@@ -136,17 +133,6 @@ df_dist_summary = df_dist_summary.merge(df_district[["District", "Population"]],
 df_dist_summary["Green_per_Capita"] = df_dist_summary["Total_Park_Area_Sqm"] / df_dist_summary["Population"]
 df_dist_summary["Ratio_to_Population"] = df_dist_summary["Monthly_Visitors"] / df_dist_summary["Population"]
 
-# คำนวณดัชนีความพร้อมรายสวน (มี = 1 คะแนน, ไม่มี = 0 คะแนน) เต็ม 3 คะแนน
-features_list = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
-df_park_filtered["Readiness_Score"] = df_park_filtered[features_list].apply(lambda x: x == "มี").sum(axis=1)
-
-def classify_park(score):
-    if score == 3: return "🥇 พรีเมียม (ครบ 3 ฟีเจอร์)"
-    elif score >= 1: return "🥈 มาตรฐาน (มี 1-2 ฟีเจอร์)"
-    else: return "🥉 พื้นที่พื้นฐาน (เน้นเดิน/วิ่ง)"
-
-df_park_filtered["Readiness_Class"] = df_park_filtered["Readiness_Score"].apply(classify_park)
-
 # จัดเตรียมโครงสร้างป้อนเข้าชาร์ตแบบ Dynamic 
 if selected_district == "ทั้งหมด":
     y_axis_col = "District"
@@ -173,7 +159,7 @@ bkk_green_per_capita = total_green_area / total_pop if total_pop > 0 else 0
 total_parks = len(df_park_filtered)
 
 # ----------------------------------------------------------------------
-# 4. DASHBOARD UI & VISUALIZATION (แสดงผลจับคู่ทีละ 2 กราฟ)
+# 4. DASHBOARD UI & VISUALIZATION (แสดงผลจับคู่ทีละ 2 กราฟพร้อมสรุป)
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
 st.markdown("วิเคราะห์ภาพรวมขนาดพื้นที่ พฤติกรรมการใช้งาน และความพร้อมสอดคล้องเชิงสันทนาการ")
@@ -236,10 +222,19 @@ with pair1_col2:
     else:
         st.info("ไม่พบข้อมูลผู้ใช้งาน")
 
+# [เพิ่มสรุปจุดสำคัญ คู่ที่ 1]
+if not df_chart_data.empty:
+    max_area_name = df_chart_data.loc[df_chart_data["Chart_Area"].idxmax()][y_axis_col]
+    max_visit_name = df_chart_data.loc[df_chart_data["Chart_Visitors"].idxmax()][y_axis_col]
+    st.markdown(f"""
+    > 💡 **สรุปจุดสำคัญ (พื้นที่ vs ผู้ใช้งาน):** ภายใต้เงื่อนไขปัจจุบัน แหล่งที่มีขนาดพื้นที่ทางกายภาพกว้างขวางที่สุดคือ **{max_area_name}** 
+    > ในขณะที่ศูนย์รวมที่มีแรงดึงดูดผู้เข้าใช้งานจริงสูงที่สุดต่อเดือนคือ **{max_visit_name}** ซึ่งสะท้อนความหนาแน่นที่ต้องได้รับการบริหารจัดการทางพฤติกรรมเมืองเป็นพิเศษ
+    """)
+
 st.markdown("---")
 
 # ----------------------------------------------------------------------
-# 📊 คู่ที่ 2: อัตราส่วนแบกรับประชากร VS โดนัทสิ่งอำนวยความสะดวก (2 Columns)
+# 📊 คู่ที่ 2: อัตราส่วนแบกรับประชากร VS สัดส่วนสิ่งอำนวยความสะดวกแยกประเภท (2 Columns)
 # ----------------------------------------------------------------------
 pair2_col1, pair2_col2 = st.columns(2)
 
@@ -260,30 +255,47 @@ with pair2_col1:
         st.info("ไม่พบข้อมูลดัชนี")
 
 with pair2_col2:
-    st.markdown(f"##### 🍩 สัดส่วนระดับความพร้อมของสิ่งอำนวยความสะดวกภายในสวน")
+    st.markdown(f"##### 🍩 สัดส่วนความพร้อมแยกตามประเภทสิ่งอำนวยความสะดวก")
     if not df_park_filtered.empty:
-        # คำนวณและนับสัดส่วนระดับสวนในเงื่อนไขปัจจุบันเพื่อทำ Donut Chart
-        df_donut_data = df_park_filtered["Readiness_Class"].value_counts().reset_index()
-        df_donut_data.columns = ["ระดับความพร้อม", "จำนวนสวน"]
+        # คำนวณสับสัดส่วนแบบแจกแจงทีละฟีเจอร์ตามบรีฟใหม่
+        features_map = {
+            "ที่จอดรถ (Car Park)": "ที่จอดรถ",
+            "มิตรกับสัตว์เลี้ยง (Pet Friendly)": "มิตรกับสัตว์เลี้ยง",
+            "อนุญาตให้ขี่จักรยาน (Bicycle Path)": "ทางจักรยาน"
+        }
+        
+        feature_counts = []
+        for eng_col, th_name in features_map.items():
+            has_service = df_park_filtered[eng_col].value_counts().get("มี", 0)
+            feature_counts.append({"สิ่งอำนวยความสะดวก": th_name, "จำนวนที่มีบริการ": has_service})
+            
+        df_feature_pie = pd.DataFrame(feature_counts)
         
         fig_donut = px.pie(
-            df_donut_data, values="จำนวนสวน", names="ระดับความพร้อม", hole=0.5,
-            color="ระดับความพร้อม",
-            color_discrete_map={
-                "🥇 พรีเมียม (ครบ 3 ฟีเจอร์)": "#2ecc71",
-                "🥈 มาตรฐาน (มี 1-2 ฟีเจอร์)": "#f1c40f",
-                "🥉 พื้นที่พื้นฐาน (เน้นเดิน/วิ่ง)": "#e74c3c"
-            }
+            df_feature_pie, values="จำนวนที่มีบริการ", names="สิ่งอำนวยความสะดวก", hole=0.5,
+            color="สิ่งอำนวยความสะดวก",
+            color_discrete_map={"ที่จอดรถ": "#3498db", "มิตรกับสัตว์เลี้ยง": "#e67e22", "ทางจักรยาน": "#9b59b6"}
         )
         fig_donut.update_traces(textposition='inside', textinfo='percent+value')
         fig_donut.update_layout(
-            height=360,
-            margin=dict(l=20, r=20, t=10, b=10),
+            height=360, margin=dict(l=20, r=20, t=10, b=10),
             legend=dict(orientation="h", yanchor="bottom", y=-0.1, xanchor="center", x=0.5)
         )
         st.plotly_chart(fig_donut, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลสิ่งอำนวยความสะดวก")
+
+# [เพิ่มสรุปจุดสำคัญ คู่ที่ 2]
+if not df_park_filtered.empty:
+    max_ratio_name = df_chart_data.loc[df_chart_data["Chart_Ratio"].idxmax()][y_axis_col]
+    total_pet = df_park_filtered["มิตรกับสัตว์เลี้ยง (Pet Friendly)"].value_counts().get("มี", 0)
+    total_bike = df_park_filtered["อนุญาตให้ขี่จักรยาน (Bicycle Path)"].value_counts().get("มี", 0)
+    total_car = df_park_filtered["ที่จอดรถ (Car Park)"].value_counts().get("มี", 0)
+    
+    st.markdown(f"""
+    > 💡 **สรุปจุดสำคัญ (ภาระแบกรับ vs ความพร้อมบริการ):** แหล่งที่มีสัดส่วนผู้ใช้บริการแบกรับภาระหนักที่สุดเมื่อเทียบกับฐานประชากรคือ **{max_ratio_name}** 
+    > ขณะที่การแจกแจงสิ่งอำนวยความสะดวกพบว่า ในบรรดาสวนทั้งหมดมีบริการ **ที่จอดรถ {total_car} แห่ง**, **ทางจักรยาน {total_bike} แห่ง** และ **มิตรกับสัตว์เลี้ยง {total_pet} แห่ง** ตามลำดับ ชี้ให้เห็นฟีเจอร์ที่ยังคงขาดแคลนในพื้นที่
+    """)
 
 st.markdown("---")
 
