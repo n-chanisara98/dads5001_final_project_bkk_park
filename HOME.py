@@ -49,20 +49,18 @@ page_col1, page_col2, page_col3 = st.columns(3)
 with page_col1:
     with st.container(border=True): # หน้า 1
         st.markdown("#### 🏠 Page 1: Overview & Data Management")
-        st.write("หน้าภาพรวมข้อมูลแรกเริ่มของระบบ จัดระเบียบ จัดเตรียมตารางฐานข้อมูลดิบ และแปลงค่ามาตราวัดพื้นที่เบื้องต้นให้พร้อมใช้งาน")
-        st.caption("🎯 เน้นการจัดการข้อมูล (Data Ingestion & Base Setup)")
+        st.write("วิเคราะห์ภาพรวมขนาดพื้นที่สีเขียวรวมรายเขต พฤติกรรมการใช้งาน และความพร้อมเชิงสันทนาการ (Amenities)")
 
 with page_col2:
     with st.container(border=True): # หน้า 2 
         st.markdown("#### 🔍 Page 2: Park Finder & Air Quality")
         st.write("ระบบ Map-Based ค้นหาสวน คัดกรองขนาดพื้นที่ และจับคู่สถานีตรวจฝุ่นที่อยู่ใกล้ที่สุดโดยอัตโนมัติ เพื่อเช็กสภาพอากาศก่อนออกจากบ้าน")
-        st.caption("🎯 เน้นการใช้งานจริง (Operational Dashboard)")
-
+        
 with page_col3:
     with st.container(border=True): # หน้า 3 
         st.markdown("#### 📊 Page 3: Analytics & Connectivity")
         st.write("หน้าวิเคราะห์ความสัมพันธ์เชิงสถิติ (Scatter Plot) ระหว่างขนาดสวนกับระยะห่างสถานีรถไฟฟ้า พร้อม Pie Chart ดูสัดส่วนการเข้าถึงระบบราง")
-        st.caption("🎯 เน้นการหาอินไซต์ (Analytical Insights)")
+        
 
 st.write("---")
 st.caption("DADS 5001 - Data Analytics and Data Science Tools and Programming Project | 2026")
