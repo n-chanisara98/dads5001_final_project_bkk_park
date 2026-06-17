@@ -47,9 +47,11 @@ mongo_col = mongo_db["pm25"]
 # =====================================================================
 
 def refresh_and_get_pm25():
-    api_url = "http://api.air4thai.com/forweb/getBKK_JSON.php"
+    # 🌟 เปลี่ยนจาก http เป็น https เพื่อให้ผ่านการบล็อกเน็ตเวิร์กของ Streamlit Cloud
+    api_url = "https://api.air4thai.com/forweb/getBKK_JSON.php"
     try:
-        response = requests.get(api_url, timeout=5)
+        # 🌟 เติม verify=False เพื่อข้ามการตรวจใบรับรอง ป้องกันการเชื่อมต่อถูกตัด
+        response = requests.get(api_url, timeout=5, verify=False)
         if response.status_code == 200:
             api_json_data = response.json()
             mongo_col.replace_one({"_id": "bkk_latest_air"}, api_json_data, upsert=True)
@@ -63,7 +65,12 @@ def refresh_and_get_pm25():
     if air_data and 'stations' in air_data:
         for station in air_data['stations']:
             try:
-                pm25_val = station.get('aqi', {}).get('pm25', {}).get('value')
+                # เข้าถึงโครงสร้าง Dict ของ Air4Thai ให้ถูกล็อก
+                # (ตรวจเช็กโครงสร้างพิกัดและค่า AQI/PM25)
+                aqi_info = station.get('aqi', {})
+                pm25_info = aqi_info.get('pm25', {}) if isinstance(aqi_info, dict) else {}
+                pm25_val = pm25_info.get('value') if isinstance(pm25_info, dict) else None
+                
                 stations_list.append({
                     'station_name': station.get('nameTH'),
                     'station_lat': float(station.get('lat')),
