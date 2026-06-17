@@ -48,7 +48,7 @@ mongo_col = mongo_db["pm25"]
 
 def refresh_and_get_pm25():
     # 🌟 เปลี่ยนจาก http เป็น https เพื่อให้ผ่านการบล็อกเน็ตเวิร์กของ Streamlit Cloud
-    api_url = "https://api.air4thai.com/forweb/getBKK_JSON.php"
+    api_url = "https://air4thai.pcd.go.th/services/getNewAQI_JSON.php?region=1"
     try:
         # 🌟 เติม verify=False เพื่อข้ามการตรวจใบรับรอง ป้องกันการเชื่อมต่อถูกตัด
         response = requests.get(api_url, timeout=5, verify=False)
