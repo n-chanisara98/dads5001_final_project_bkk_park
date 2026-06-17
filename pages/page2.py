@@ -256,7 +256,7 @@ with col_map:
         )
         
         fig.update_layout(
-            mapbox_style="carto-darkmatter",
+            mapbox_style="open-street-map",
             margin={"r":0,"t":0,"l":0,"b":0}
         )
         
