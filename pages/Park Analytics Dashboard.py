@@ -212,18 +212,12 @@ total_pop = df_district[df_district["District"] == selected_district]["Populatio
 bkk_green_per_capita = total_green_area / total_pop if total_pop > 0 else 0
 total_parks = len(df_park_filtered)
 
-# ฟังก์ชันกลางสำหรับตกแต่งกราฟแท่งแนวนอน + เพิ่ม Scroll bar แกน Y
-def apply_premium_bar_layout(fig, df_len, y_vals):
+# ฟังก์ชันตกแต่งกราฟแท่งแนวนอน (แก้บั๊กค้างและเปิดฟีเจอร์ Scroll ผ่านเมาส์เลื่อน)
+def apply_premium_bar_layout(fig, df_len):
     visible_items = 5
     if df_len > visible_items:
+        # กำหนดให้เห็น 5 อันดับแรกก่อน และปล่อยให้สไลด์เมาส์เลื่อนดูส่วนที่เหลือ
         fig.update_yaxes(range=[df_len - visible_items - 0.5, df_len - 0.5])
-        fig.update_layout(
-            yaxis=dict(
-                autorange=False,
-                rangeslider=dict(visible=True, thickness=0.03),
-                matches='y'
-            )
-        )
     
     fig.update_traces(textposition='outside', marker_line_color='rgba(0,0,0,0)', marker_line_width=0)
     fig.update_layout(
@@ -233,7 +227,7 @@ def apply_premium_bar_layout(fig, df_len, y_vals):
         showlegend=False,
         coloraxis_showscale=False,
         height=400,
-        margin=dict(l=120, r=60, t=15, b=15),
+        margin=dict(l=130, r=60, t=15, b=30),
         hovermode="y unified"
     )
     return fig
@@ -279,6 +273,7 @@ pair1_col1, pair1_col2 = st.columns(2)
 
 with pair1_col1:
     st.markdown(f"##### 🟢 การวิเคราะห์ขนาดพื้นที่รวม ({'รายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
+    st.caption("ℹ️ หากแท่งกราฟแน่นเกินไป สามารถใช้ Scroll เมาส์เลื่อนขึ้น-ลง หรือซูมบนตัวกราฟได้")
     if not df_chart_data.empty:
         df_sorted_area = df_chart_data.sort_values(by="Chart_Area", ascending=True)
         fig_area = px.bar(
@@ -287,13 +282,14 @@ with pair1_col1:
             color="Chart_Area", color_continuous_scale="Greens",
             labels={"Chart_Area": "ขนาดพื้นที่ (ตร.ม.)", y_axis_col: y_label_text}
         )
-        fig_area = apply_premium_bar_layout(fig_area, len(df_sorted_area), df_sorted_area[y_axis_col])
-        st.plotly_chart(fig_area, use_container_width=True)
+        fig_area = apply_premium_bar_layout(fig_area, len(df_sorted_area))
+        st.plotly_chart(fig_area, use_container_width=True, config={'scrollZoom': True})
     else:
         st.info("ไม่พบข้อมูลพื้นที่")
 
 with pair1_col2:
     st.markdown(f"##### 👥 ปริมาณสถิติผู้เข้าใช้งานจริงต่อเดือน ({'รายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
+    st.caption("ℹ️ หากแท่งกราฟแน่นเกินไป สามารถใช้ Scroll เมาส์เลื่อนขึ้น-ลง หรือซูมบนตัวกราฟได้")
     if not df_chart_data.empty:
         df_sorted_visitors = df_chart_data.sort_values(by="Chart_Visitors", ascending=True)
         fig_visitors = px.bar(
@@ -302,8 +298,8 @@ with pair1_col2:
             color="Chart_Visitors", color_continuous_scale="Oranges",
             labels={"Chart_Visitors": "จำนวนผู้เข้าชม (คน/เดือน)", y_axis_col: y_label_text}
         )
-        fig_visitors = apply_premium_bar_layout(fig_visitors, len(df_sorted_visitors), df_sorted_visitors[y_axis_col])
-        st.plotly_chart(fig_visitors, use_container_width=True)
+        fig_visitors = apply_premium_bar_layout(fig_visitors, len(df_sorted_visitors))
+        st.plotly_chart(fig_visitors, use_container_width=True, config={'scrollZoom': True})
     else:
         st.info("ไม่พบข้อมูลผู้ใช้งาน")
 
@@ -316,6 +312,7 @@ pair2_col1, pair2_col2 = st.columns(2)
 
 with pair2_col1:
     st.markdown(f"##### 📈 อัตราส่วนสัดส่วนการแบกรับผู้ใช้งานเปรียบเทียบฐานประชากร")
+    st.caption("ℹ️ หากแท่งกราฟแน่นเกินไป สามารถใช้ Scroll เมาส์เลื่อนขึ้น-ลง หรือซูมบนตัวกราฟได้")
     if not df_chart_data.empty:
         df_sorted_ratio = df_chart_data.sort_values(by="Chart_Ratio", ascending=True)
         fig_ratio = px.bar(
@@ -324,13 +321,14 @@ with pair2_col1:
             color="Chart_Ratio", color_continuous_scale="Purples",
             labels={"Chart_Ratio": "ดัชนีอัตราส่วน (เท่า)", y_axis_col: y_label_text}
         )
-        fig_ratio = apply_premium_bar_layout(fig_ratio, len(df_sorted_ratio), df_sorted_ratio[y_axis_col])
-        st.plotly_chart(fig_ratio, use_container_width=True)
+        fig_ratio = apply_premium_bar_layout(fig_ratio, len(df_sorted_ratio))
+        st.plotly_chart(fig_ratio, use_container_width=True, config={'scrollZoom': True})
     else:
         st.info("ไม่พบข้อมูลดัชนี")
 
 with pair2_col2:
     st.markdown(f"##### 🍩 สัดส่วนความพร้อมแยกตามประเภทสิ่งอำนวยความสะดวก")
+    st.caption("<br>", unsafe_allow_html=True)
     if not df_park_filtered.empty:
         features_map = {
             "ที่จอดรถ (Car Park)": "ที่จอดรถ",
