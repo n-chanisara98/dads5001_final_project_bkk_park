@@ -6,55 +6,59 @@ import streamlit as st
 st.set_page_config(page_title="Page 1: Park Analytics", page_icon="🌳", layout="wide")
 
 # ----------------------------------------------------------------------
-# 🎨 UI/UX & BACKGROUND PARK IMAGE ADVANCED STYLING
+# 🎨 UI/UX ADVANCED GLASSMORPHISM STYLING (โปร่งแสงเห็นวิวชัดเจน)
 # ----------------------------------------------------------------------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap');
 
-    /* นำรูปภาพวิวสวนสาธารณะมาใส่เป็น Background และคุมฟอนต์ภาษาไทย/อังกฤษ */
+    /* 1. ใส่รูปภาพพื้นหลังวิวสวนสาธารณะที่คมชัด และคุมฟอนต์ทั้งแอป */
     html, body, [data-testid="stAppViewContainer"] {
         font-family: 'Inter', 'Kanit', sans-serif;
-        background: linear-gradient(rgba(241, 245, 249, 0.82), rgba(241, 245, 249, 0.82)), 
+        background: linear-gradient(rgba(15, 23, 42, 0.15), rgba(15, 23, 42, 0.15)), 
                     url('https://images.unsplash.com/photo-1519331379826-f10be5486c6f?q=80&w=1920') no-repeat center center fixed;
         background-size: cover;
         color: #0f172a;
     }
     
-    /* กล่องกระจกฝ้าใสโปร่งแสงสีขาว (Glassmorphism คลุมคอนเทนต์หลัก) */
+    /* 2. ปรับแต่งกล่องคอนเทนต์หลักให้โปร่งแสงมากขึ้น (ใส่น้ำหนักสีขาวอ่อนลงเพื่อเห็นวิวข้างหลังชัดเจน) */
     [data-testid="stMainBlockContainer"] {
-        background: rgba(255, 255, 255, 0.75);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
+        background: rgba(255, 255, 255, 0.65) !important;
+        backdrop-filter: blur(20px) saturate(160%);
+        -webkit-backdrop-filter: blur(20px) saturate(160%);
         border-radius: 24px;
         padding: 40px !important;
         margin-top: 20px;
         margin-bottom: 20px;
-        box-shadow: 0 20px 40px rgba(15, 23, 42, 0.08);
+        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.4);
     }
 
-    /* ตกแต่ง Sidebar พื้นหลังสีขาวโปร่งแสงเบาๆ ตัดขอบมนสวยงาม */
-    [data-testid="stSidebar"] {
-        background-color: rgba(255, 255, 255, 0.92) !important;
-        border-right: 1px solid #e2e8f0;
+    /* 3. ปลดล็อกแก้ปัญหาแถบขาวทึบของ Sidebar ปรับให้โปร่งแสงทะลุเห็นวิวสวน */
+    [data-testid="stSidebar"], [data-testid="stSidebarContent"] {
+        background-color: rgba(255, 255, 255, 0.25) !important;
+        backdrop-filter: blur(15px);
+        -webkit-backdrop-filter: blur(15px);
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
     }
     
-    /* ปรับแต่งดีไซน์ Sidebar Widgets และ Checkbox ให้เป็นระเบียบเรียบร้อย */
+    /* 4. ปรับกล่องข้อความและ Widget ใน Sidebar ให้เป็นกระจกฝ้าสีขาวใสสะอาดตา */
     [data-testid="stSidebar"] .stCheckbox, [data-testid="stSidebar"] .stSelectbox {
-        background-color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.6) !important;
+        backdrop-filter: blur(5px);
         padding: 12px 16px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
+        border-radius: 14px;
+        border: 1px solid rgba(255, 255, 255, 0.5);
         margin-bottom: 14px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.01);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.02);
     }
     
-    /* สไตล์หัวข้อและฟอนต์รายงาน */
+    /* สไตล์หัวข้อและข้อความระบบ */
     h1 {
         font-weight: 700 !important;
-        color: #1e3a8a !important; /* สีกรมท่าสากลแบบวิชาการ */
+        color: #1e3a8a !important;
         letter-spacing: -0.5px;
+        text-shadow: 0 1px 2px rgba(255,255,255,0.5);
     }
     h5 {
         font-weight: 600 !important;
@@ -63,23 +67,24 @@ st.markdown("""
         margin-bottom: 10px !important;
     }
     
-    /* การ์ดสถิติ (KPI Cards) ดีไซน์สไตล์คลีน ขาวลอยนวลตา */
+    /* ปรับแต่งความคมชัดของการ์ดสถิติ (KPI Cards) */
     .kpi-card {
-        background-color: #ffffff;
+        background-color: rgba(255, 255, 255, 0.85);
         padding: 24px;
         border-radius: 16px;
-        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.02);
-        border: 1px solid #e2e8f0;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.6);
         border-top: 6px solid #10b981;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .kpi-card:hover {
         transform: translateY(-3px);
-        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.06);
+        box-shadow: 0 12px 24px rgba(0, 0, 0, 0.08);
+        background-color: rgba(255, 255, 255, 0.95);
     }
     .kpi-label {
         font-size: 13px;
-        color: #64748b;
+        color: #475569;
         font-weight: 500;
         text-transform: uppercase;
         margin-bottom: 6px;
@@ -96,9 +101,9 @@ st.markdown("""
         margin-left: 4px;
     }
     
-    /* กล่องริบบอนสีเขียวไฮไลท์ข้อสรุป Insights เชิงสถิติ */
+    /* กล่องสรุปริบบอน Key Insights เชิงสถิติ */
     .insight-card {
-        background: linear-gradient(90deg, rgba(240, 253, 244, 0.9) 0%, rgba(230, 244, 234, 0.9) 100%);
+        background: linear-gradient(90deg, rgba(240, 253, 244, 0.85) 0%, rgba(230, 244, 234, 0.85) 100%);
         border-left: 5px solid #10b981;
         padding: 18px 24px;
         border-radius: 14px;
@@ -106,7 +111,8 @@ st.markdown("""
         margin-bottom: 25px;
         color: #166534;
         font-size: 15px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.01);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.01);
+        border: 1px solid rgba(255, 255, 255, 0.4);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -196,7 +202,7 @@ def load_data():
 df_district, df_parks = load_data()
 
 # ----------------------------------------------------------------------
-# 2. SIDEBAR FILTERS (จัดฟอร์มแบบคลีน เป็นสัดส่วนชัดเจน)
+# 2. SIDEBAR FILTERS
 # ----------------------------------------------------------------------
 st.sidebar.markdown("### 🔍 ตัวกรองข้อมูล (Filters)")
 
@@ -267,13 +273,13 @@ total_parks = len(df_park_filtered)
 def apply_premium_layout(fig):
     fig.update_traces(textposition='outside', textfont=dict(size=11, color='#0f172a'))
     fig.update_layout(
-        plot_bgcolor='rgba(255,255,255,0.75)',
+        plot_bgcolor='rgba(255,255,255,0.45)',
         paper_bgcolor='rgba(0,0,0,0)',
-        font=dict(family="Kanit, sans-serif", size=12, color='#334155'),
+        font=dict(family="Kanit, sans-serif", size=12, color='#1e293b'),
         showlegend=False,
         coloraxis_showscale=False,
         margin=dict(l=110, r=60, t=10, b=10),
-        xaxis=dict(showgrid=True, gridcolor='#e2e8f0', zeroline=False),
+        xaxis=dict(showgrid=True, gridcolor='rgba(15,23,42,0.08)', zeroline=False),
         yaxis=dict(showgrid=False, zeroline=False)
     )
     return fig
@@ -282,7 +288,7 @@ def apply_premium_layout(fig):
 # 4. DASHBOARD UI & VISUALIZATION
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
-st.markdown("<p style='font-size: 15px; color:#334155; margin-top:-10px;'>วิเคราะห์โครงสร้างพื้นที่สีเขียว มิติการใช้งานสันทนาการ และความสอดคล้องเชิงนโยบายสาธารณะในเขตกรุงเทพมหานคร</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size: 15px; color:#1e293b; margin-top:-10px;'>วิเคราะห์โครงสร้างพื้นที่สีเขียว มิติการใช้งานสันทนาการ และความสอดคล้องเชิงนโยบายสาธารณะในเขตกรุงเทพมหานคร</p>", unsafe_allow_html=True)
 st.markdown("---")
 
 ### ส่วนที่ 1: KPI SCORECARDS
@@ -325,7 +331,7 @@ if not df_chart_data.empty:
     </div>
     ''', unsafe_allow_html=True)
 
-# คำนวณความสูงชาร์ตแบบ Dynamic เพื่อเปิดสิทธิ์ Scrollbar สากลให้อ่านง่าย
+# คำนวณความสูงชาร์ตแบบ Dynamic เพื่อให้อ่านง่าย
 num_rows = len(df_chart_data)
 dynamic_height = max(360, num_rows * 38)
 
@@ -425,7 +431,7 @@ with pair2_col2:
 st.markdown("---")
 
 # ----------------------------------------------------------------------
-# 📋 ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด (จัดตำแหน่งระดับระนาบเดียวกัน)
+# 📋 ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด
 # ----------------------------------------------------------------------
 table_header_col, download_btn_col = st.columns([3, 1])
 
