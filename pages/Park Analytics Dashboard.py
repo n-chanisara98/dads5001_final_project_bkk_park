@@ -214,10 +214,8 @@ total_parks = len(df_park_filtered)
 
 # ฟังก์ชันกลางสำหรับตกแต่งกราฟแท่งแนวนอน + เพิ่ม Scroll bar แกน Y
 def apply_premium_bar_layout(fig, df_len, y_vals):
-    # หากข้อมูลมีมากกว่า 5 แถว จะแสดง Scrollbar เพื่อไม่ให้กราฟเบียดกันเกินไป
     visible_items = 5
     if df_len > visible_items:
-        # สั่งให้ช่วงเริ่มต้นเห็นแค่ตัวท็อป 5 อันดับแรก และสามารถเลื่อนดูที่เหลือผ่าน Scrollbar ได้
         fig.update_yaxes(range=[df_len - visible_items - 0.5, df_len - 0.5])
         fig.update_layout(
             yaxis=dict(
@@ -348,7 +346,7 @@ with pair2_col2:
         df_feature_pie = pd.DataFrame(feature_counts)
         
         fig_donut = px.pie(
-            df_feature_pie, values="จำนวนที่มีบริการ", names="สิ่งอำนวยความสะดวก", hole=0.5.2,
+            df_feature_pie, values="จำนวนที่มีบริการ", names="สิ่งอำนวยความสะดวก", hole=0.5,
             color="สิ่งอำนวยความสะดวก",
             color_discrete_map={"ที่จอดรถ": "#1e3a8a", "ทางจักรยาน": "#3b82f6", "มิตรกับสัตว์เลี้ยง": "#60a5fa"}
         )
