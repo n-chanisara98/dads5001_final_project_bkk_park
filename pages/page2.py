@@ -98,6 +98,12 @@ df_p, df_ll, df_d, df_trains = load_snowflake_data()
 # 3. 🔥 DUCKDB INTEGRATION: MERGING DATA WITH SQL (แก้ไขตรงตามโครงสร้างจริง)
 # =====================================================================
 
+
+df_p.columns = [c.replace('"', '').upper().strip() for c in df_p.columns]
+df_ll.columns = [c.replace('"', '').upper().strip() for c in df_ll.columns]
+df_d.columns = [c.replace('"', '').upper().strip() for c in df_d.columns]
+df_trains.columns = [c.replace('"', '').upper().strip() for c in df_trains.columns]
+
 duck_conn = duckdb.connect(database=':memory:')
 
 # ลงทะเบียนตารางใน DuckDB
