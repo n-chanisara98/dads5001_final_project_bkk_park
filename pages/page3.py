@@ -9,7 +9,7 @@ from scipy.spatial.distance import cdist
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Analytics - Public Transport", layout="wide")
 
-st.title("📊 Page 3: Analytics - Public Transport Connectivity")
+st.title("📊 Public Transport Connectivity")
 st.write("วิเคราะห์ความสัมพันธ์ระหว่างขนาดของสวนสาธารณะ ระยะห่างจากระบบขนส่งมวลชน (BTS/MRT) และความหนาแน่นของผู้ใช้งาน")
 
 # =====================================================================
