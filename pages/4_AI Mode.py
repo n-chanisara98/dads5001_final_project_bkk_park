@@ -161,18 +161,19 @@ with tab1:
         area = park_row["AREA"]
 
         run_m = park_row["RUN_M"]
-
+        run_m_num = pd.to_numeric(run_m, errors="coerce")
+        
         # วิเคราะห์ประเภทสวน
 
-        if pd.isna(run_m):
+        if pd.isna(run_m_num):
 
             park_type = "ไม่มีข้อมูลลู่วิ่ง"
 
-        elif run_m < 1000:
+        elif run_m_num < 1000:
 
             park_type = "สวนขนาดเล็ก"
 
-        elif run_m < 2000:
+        elif run_m_num < 2000:
 
             park_type = "สวนขนาดกลาง"
 
