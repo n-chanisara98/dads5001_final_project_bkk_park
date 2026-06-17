@@ -3,7 +3,7 @@ import pandas as pd
 import snowflake.connector
 import google.generativeai as genai
 
-st.set_page_config(page_title="Gemma 4: AI Healthy Living", layout="wide")
+st.set_page_config(page_title="AI Healthy Living", layout="wide")
 
 st.title("🤖 AI Urban Health & Wellness Assistant")
 st.write("โมเดล AI บนระบบคลาวด์เพื่อการส่งเสริมสุขภาพคนเมือง (The Gemma 4 Good Hackathon)")
@@ -13,7 +13,7 @@ st.write("---")
 # 1. SETUP AI CONFIGURATION (ดึงคีย์ความปลอดภัยจาก Secrets หลังบ้าน)
 # =====================================================================
 if "GEMINI_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
+    genai.configure(api_key=st.secrets["google"]["GEMINI_API_KEY"])
 else:
     st.error("❌ ไม่พบ GEMINI_API_KEY ในระบบ Secrets กรุณาเซ็ตอัพค่าก่อนใช้งาน")
     st.stop()
