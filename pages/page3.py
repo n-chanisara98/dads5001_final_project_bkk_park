@@ -134,7 +134,8 @@ try:
                 "AREA_SQM": "ขนาดพื้นที่สวน (ตารางเมตร)",
                 "USAGE_DENSITY": "ความหนาแน่นผู้ใช้งาน"
             },
-            title="ความสัมพันธ์ของขนาดสวน (ตร.ม.) พิกัดราง และความหนาแน่น"
+            title="ความสัมพันธ์ของขนาดสวน (ตร.ม.) \n 
+            พิกัดราง และความหนาแน่น"
         )
         fig_scatter.update_layout(template="plotly_white")
         st.plotly_chart(fig_scatter, use_container_width=True)
