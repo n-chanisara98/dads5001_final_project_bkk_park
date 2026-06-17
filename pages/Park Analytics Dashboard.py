@@ -6,56 +6,74 @@ import streamlit as st
 st.set_page_config(page_title="Page 1: Park Analytics", page_icon="🌳", layout="wide")
 
 # ----------------------------------------------------------------------
-# 🎨 CUSTOM PREMIUM CSS THEMING (สไตล์ส่งรายงานอาจารย์)
+# 🎨 UI/UX & BACKGROUND PICTURE ADVANCED STYLING
 # ----------------------------------------------------------------------
 st.markdown("""
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Kanit:wght@300;400;500;600&display=swap');
 
-    /* ตั้งค่าฟอนต์หลักและพื้นหลัง App */
+    /* นำรูปภาพธรรมชาติพรีเมียมมาใส่เป็น Background และคุม Font ทั้งหน้า */
     html, body, [data-testid="stAppViewContainer"] {
         font-family: 'Inter', 'Kanit', sans-serif;
-        background-color: #f8fafc;
+        background: linear-gradient(rgba(248, 250, 252, 0.88), rgba(248, 250, 252, 0.88)), 
+                    url('https://images.unsplash.com/photo-1518495973542-4542c06a5843?q=80&w=1920') no-repeat center center fixed;
+        background-size: cover;
         color: #0f172a;
     }
     
-    /* ตกแต่งแถบด้านข้าง (Sidebar) */
+    /* ปรับแต่งบล็อกกระจกฝ้าใส (Glassmorphism Effect) ครอบตู้คอนเทนต์ */
+    [data-testid="stMainBlockContainer"] {
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 24px;
+        padding: 40px !important;
+        margin-top: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+    }
+
+    /* ตกแต่ง Sidebar พื้นหลังสีขาวตัดขอบมน */
     [data-testid="stSidebar"] {
-        background-color: #ffffff !important;
+        background-color: rgba(255, 255, 255, 0.95) !important;
         border-right: 1px solid #e2e8f0;
     }
     
-    /* ปรับแต่งส่วนหัวข้อหลัก */
+    /* ปรับแต่งมิติ Sidebar Widgets และ Checkbox ให้ดูพรีเมียม */
+    [data-testid="stSidebar"] .stCheckbox, [data-testid="stSidebar"] .stSelectbox {
+        background-color: #f8fafc;
+        padding: 10px 14px;
+        border-radius: 10px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 12px;
+    }
+    
+    /* สไตล์หัวข้อ */
     h1 {
         font-weight: 700 !important;
-        color: #1e3a8a !important; /* สีกรมท่าสากล */
+        color: #1e3a8a !important;
         letter-spacing: -0.5px;
     }
     h5 {
         font-weight: 600 !important;
         color: #334155 !important;
-        margin-bottom: 12px !important;
+        margin-top: 15px !important;
+        margin-bottom: 10px !important;
     }
     
-    /* การ์ดสถิติ (KPI Cards) แบบพรีเมียม */
-    .kpi-container {
-        display: flex;
-        gap: 16px;
-        margin-bottom: 20px;
-    }
+    /* การ์ดสถิติ (KPI Cards) ดีไซน์สไตล์คลีนแบบ Dashboard สากล */
     .kpi-card {
         background-color: #ffffff;
         padding: 24px;
         border-radius: 16px;
-        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-        border: 1px solid #f1f5f9;
-        border-top: 5px solid #10b981; /* เริ่มต้นด้วยสีเขียวเข้มสากล */
-        width: 100%;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.03), 0 2px 4px -2px rgba(0, 0, 0, 0.03);
+        border: 1px solid #e2e8f0;
+        border-top: 6px solid #10b981;
         transition: transform 0.2s ease, box-shadow 0.2s ease;
     }
     .kpi-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -4px rgba(0, 0, 0, 0.08);
+        transform: translateY(-3px);
+        box-shadow: 0 12px 20px -3px rgba(0, 0, 0, 0.06);
     }
     .kpi-label {
         font-size: 13px;
@@ -63,10 +81,9 @@ st.markdown("""
         font-weight: 500;
         text-transform: uppercase;
         margin-bottom: 6px;
-        letter-spacing: 0.5px;
     }
     .kpi-value {
-        font-size: 30px;
+        font-size: 32px;
         color: #0f172a;
         font-weight: 700;
     }
@@ -77,15 +94,17 @@ st.markdown("""
         margin-left: 4px;
     }
     
-    /* กล่องสรุปจุดสำคัญเชิงสถิติ (Insight Highlights) */
+    /* กล่องริบบอนสรุป Insight พิเศษ */
     .insight-card {
         background: linear-gradient(90deg, #f0fdf4 0%, #e6f4ea 100%);
         border-left: 5px solid #10b981;
-        padding: 16px 20px;
-        border-radius: 12px;
-        margin-bottom: 24px;
+        padding: 18px 24px;
+        border-radius: 14px;
+        margin-top: 15px;
+        margin-bottom: 25px;
         color: #166534;
-        font-size: 14.5px;
+        font-size: 15px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.02);
     }
 </style>
 """, unsafe_allow_html=True)
@@ -175,24 +194,23 @@ def load_data():
 df_district, df_parks = load_data()
 
 # ----------------------------------------------------------------------
-# 2. SIDEBAR FILTERS
+# 2. SIDEBAR FILTERS (จัดฟอร์มและตกแต่งให้เป็นระเบียบ)
 # ----------------------------------------------------------------------
 st.sidebar.markdown("### 🔍 ตัวกรองข้อมูล (Filters)")
 
+selected_district = st.sidebar.selectbox("เลือกเขตพื้นที่:", ["ทั้งหมด"] + list(df_district["District"].unique()), key="sel_dist")
+st.sidebar.markdown("---")
+st.sidebar.markdown("##### ⚙️ สิ่งอำนวยความสะดวก")
+filter_pet = st.sidebar.checkbox("🐾 เฉพาะมิตรกับสัตว์เลี้ยง", key="chk_pet")
+filter_bike = st.sidebar.checkbox("🚲 เฉพาะที่ขี่จักรยานได้", key="chk_bike")
+
+st.sidebar.markdown("<br>", unsafe_allow_html=True)
 def reset_filters():
     st.session_state.sel_dist = "ทั้งหมด"
     st.session_state.chk_pet = False
     st.session_state.chk_bike = False
 
-selected_district = st.sidebar.selectbox("เลือกเขตพื้นที่:", ["ทั้งหมด"] + list(df_district["District"].unique()), key="sel_dist")
-st.sidebar.markdown("---")
-st.sidebar.markdown("##### ⚙️ เงื่อนไขสิ่งอำนวยความสะดวก")
-filter_pet = st.sidebar.checkbox("🐾 เฉพาะมิตรกับสัตว์เลี้ยง", key="chk_pet")
-filter_bike = st.sidebar.checkbox("🚲 เฉพาะที่ขี่จักรยานได้", key="chk_bike")
-
-st.sidebar.markdown("<br>", unsafe_allow_html=True)
-if st.sidebar.button("🔄 ล้างตัวกรองทั้งหมด", on_click=reset_filters, use_container_width=True):
-    st.rerun()
+st.sidebar.button("🔄 ล้างตัวกรองทั้งหมด", on_click=reset_filters, use_container_width=True)
 
 # ----------------------------------------------------------------------
 # 3. DYNAMIC DATA FILTERING PROCESS
@@ -232,7 +250,7 @@ else:
     y_label_text = f"รายชื่อสวนในเขต {selected_district}"
     df_chart_data = df_park_filtered.copy()
     df_chart_data["Chart_Area"] = df_chart_data["Park_Area_Sqm"]
-    df_chart_data["Chart_Visitors"] = df_chart_data["Park_Monthly_Visitors"]
+    df_chart_data["Chart_Visitors"] = df_park_filtered["Park_Monthly_Visitors"]
     
     current_pop = df_district[df_district["District"] == selected_district]["Population"].values[0]
     df_chart_data["Chart_Ratio"] = df_chart_data["Chart_Visitors"] / current_pop
@@ -243,17 +261,17 @@ total_pop = df_district[df_district["District"] == selected_district]["Populatio
 bkk_green_per_capita = total_green_area / total_pop if total_pop > 0 else 0
 total_parks = len(df_park_filtered)
 
-# ฟังก์ชันกลางสำหรับตกแต่ง Layout ชาร์ตแท่งให้ดูโมเดิร์นและเป็นระเบียบ
+# ฟังก์ชันปรับแต่งความคลีนของชาร์ตระดับมืออาชีพ
 def apply_premium_layout(fig):
     fig.update_traces(textposition='outside', textfont=dict(size=11, color='#334155'))
     fig.update_layout(
-        plot_bgcolor='rgba(255,255,255,1)',
+        plot_bgcolor='rgba(255,255,255,0.7)',
         paper_bgcolor='rgba(0,0,0,0)',
         font=dict(family="Kanit, sans-serif", size=12, color='#475569'),
         showlegend=False,
         coloraxis_showscale=False,
-        margin=dict(l=110, r=60, t=20, b=20),
-        xaxis=dict(showgrid=True, gridcolor='#f1f5f9', zeroline=False),
+        margin=dict(l=110, r=60, t=10, b=10),
+        xaxis=dict(showgrid=True, gridcolor='#e2e8f0', zeroline=False),
         yaxis=dict(showgrid=False, zeroline=False)
     )
     return fig
@@ -262,10 +280,10 @@ def apply_premium_layout(fig):
 # 4. DASHBOARD UI & VISUALIZATION
 # ----------------------------------------------------------------------
 st.title("🌳 Park Analytics Dashboard")
-st.markdown("<p style='font-size: 15px; color:#475569; margin-top:-10px;'>วิเคราะห์ภาพรวมขนาดพื้นที่ พฤติกรรมการใช้งาน และความพร้อมสอดคล้องเชิงสันทนาการของสวนสาธารณะในกรุงเทพมหานคร</p>", unsafe_allow_html=True)
+st.markdown("<p style='font-size: 15px; color:#475569; margin-top:-10px;'>วิเคราะห์โครงสร้างพื้นที่สีเขียว มิติการใช้งานสันทนาการ และความสอดคล้องเชิงนโยบายสาธารณะในเขตกรุงเทพมหานคร</p>", unsafe_allow_html=True)
 st.markdown("---")
 
-### ส่วนที่ 1: KPI SCORECARDS (ปรับสไตล์ UI ใหม่)
+### ส่วนที่ 1: KPI SCORECARDS
 col1, col2, col3 = st.columns(3)
 with col1:
     st.markdown(f'''
@@ -299,20 +317,20 @@ if not df_chart_data.empty:
     st.markdown(f'''
     <div class="insight-card">
         <strong>💡 สรุปจุดสำคัญเชิงสถิติ (Key Insights):</strong> &nbsp;
-        พื้นที่ใหญ่ที่สุด: <u>{max_area_name}</u> &nbsp;|&nbsp; 
-        ผู้ใช้งานจริงสูงสุด: <u>{max_visit_name}</u> &nbsp;|&nbsp; 
-        แบกรับภาระต่อประชากรสูงสุด: <u>{max_ratio_name}</u>
+        พื้นที่ขนาดใหญ่ที่สุด: <u>{max_area_name}</u> &nbsp;|&nbsp; 
+        ปริมาณผู้ใช้งานจริงสูงสุด: <u>{max_visit_name}</u> &nbsp;|&nbsp; 
+        ดัชนีแบกรับภาระประชากรสูงสุด: <u>{max_ratio_name}</u>
     </div>
     ''', unsafe_allow_html=True)
+
+# คำนวณความสูงชาร์ตแบบ Dynamic เพื่อเปิดสิทธิ์ Scrollbar สากลให้อ่านง่าย
+num_rows = len(df_chart_data)
+dynamic_height = max(360, num_rows * 38)
 
 # ----------------------------------------------------------------------
 # 📊 คู่ที่ 1: ขนาดพื้นที่รวม VS ปริมาณผู้ใช้งานจริง (2 Columns)
 # ----------------------------------------------------------------------
 pair1_col1, pair1_col2 = st.columns(2)
-
-# คำนวณความสูงแบบ Dynamic เพื่อรองรับแถวข้อมูลจำนวนมาก และให้ Streamlit เปิดสิทธิ์ Scrollbar แนวตั้งข้างนอกกล่องชาร์ต
-num_rows = len(df_chart_data)
-dynamic_height = max(360, num_rows * 38)
 
 with pair1_col1:
     st.markdown(f"##### 🟢 การวิเคราะห์ขนาดพื้นที่รวม ({'รายเขต' if selected_district == 'ทั้งหมด' else f'รายสวนในเขต {selected_district}'})")
@@ -385,11 +403,10 @@ with pair2_col2:
             
         df_feature_pie = pd.DataFrame(feature_counts)
         
-        # คุมโทนสีตามหลัก Data Visualization สากล (Blue-Cyan Gradient)
         fig_donut = px.pie(
             df_feature_pie, values="จำนวนที่มีบริการ", names="สิ่งอำนวยความสะดวก", hole=0.5,
             color="สิ่งอำนวยความสะดวก",
-            color_discrete_map={"ที่จอดรถ": "#1e3a8a", "ทางจักรยาน": "#3b82f6", "มิตรกับสัตว์เลี้ยง": "#a5f3fc"}
+            color_discrete_map={"ที่จอดรถ": "#1e3a8a", "ทางจักรยาน": "#3b82f6", "มิตรกับสัตว์เลี้ยง": "#90e0ef"}
         )
         fig_donut.update_traces(textposition='inside', textinfo='percent+value', insidetextfont=dict(size=12, weight='bold'))
         fig_donut.update_layout(
@@ -406,22 +423,23 @@ with pair2_col2:
 st.markdown("---")
 
 # ----------------------------------------------------------------------
-# 📋 ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด
+# 📋 ส่วนที่ 5: ตารางสถิติสรุปพร้อมปุ่มดาวน์โหลด (จัดตำแหน่งระดับระนาบเดียวกัน)
 # ----------------------------------------------------------------------
-table_col, download_col = st.columns([4, 1])
-with table_col:
+table_header_col, download_btn_col = st.columns([3, 1])
+
+with table_header_col:
     st.markdown("### 📋 ตารางสถิติและรายละเอียดสิ่งอำนวยความสะดวกของสวนสาธารณะ")
+
 features_disp = ["ที่จอดรถ (Car Park)", "มิตรกับสัตว์เลี้ยง (Pet Friendly)", "อนุญาตให้ขี่จักรยาน (Bicycle Path)"]
 
 if not df_park_filtered.empty:
     df_table_show = df_park_filtered[["Park_Name", "District", "Park_Area_Sqm", "Park_Monthly_Visitors"] + features_disp].copy()
     df_table_show.columns = ["ชื่อสวนสาธารณะ", "เขตพื้นที่", "ขนาดพื้นที่ (ตร.ม.)", "ผู้ใช้บริการ (คน/เดือน)", "ที่จอดรถ", "มิตรกับสัตว์เลี้ยง", "ทางจักรยาน"]
     
-    with download_col:
-        st.markdown("<br>", unsafe_allow_html=True)
+    with download_btn_col:
         csv_data = df_table_show.to_csv(index=False).encode('utf-8-sig')
         st.download_button(
-            label="📥 ดาวน์โหลดข้อมูล (CSV)",
+            label="📥 ดาวน์โหลดข้อมูลสรุป (CSV)",
             data=csv_data,
             file_name="bkk_park_filtered_data.csv",
             mime="text/csv",
