@@ -132,6 +132,10 @@ def haversine_distance(lat1, lon1, lat2, lon2):
     a = np.sin(delta_phi/2)**2 + np.cos(phi1) * np.cos(phi2) * np.sin(delta_lambda/2)**2
     return r * (2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a)))
 
+# 🔍 แทรกตรงนี้เพื่อดูว่าหน้าตาคอลัมน์พิกัดปัจจุบันชื่ออะไร
+st.write("🔍 [Debug พิกัดฝุ่น] คอลัมน์ที่มีในตารางปัจจุบันคือ:", list(df_parks_merged.columns))
+st.write("🔍 [Debug ข้อมูลฝุ่นดิบ] ดึงมาได้กี่สถานี:", len(df_stations_pm25))
+
 # จับคู่สถานีฝุ่นที่ใกล้ที่สุด
 if not df_stations_pm25.empty and not df_parks_merged.empty:
     park_coords = df_parks_merged[['LAT', 'LNG']].values
