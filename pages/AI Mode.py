@@ -3,30 +3,40 @@ import pandas as pd
 import snowflake.connector
 import google.generativeai as genai
 
-st.set_page_config(page_title="AI Healthy Living", layout="wide")
+# ============================================================
+# PAGE CONFIG
+# ============================================================
 
-st.title("🤖 AI Urban Health & Wellness Assistant")
-st.write("โมเดล AI บนระบบคลาวด์เพื่อการส่งเสริมสุขภาพคนเมือง (The Gemma 4 Good Hackathon)")
-st.write("---")
+st.set_page_config(
+    page_title="AI Wellness Assistant",
+    page_icon="🤖",
+    layout="wide"
+)
 
-# =====================================================================
-# 1. SETUP AI CONFIGURATION (ดึงคีย์ความปลอดภัยจาก Secrets หลังบ้าน)
-# =====================================================================
-if "GEMINI_API_KEY" in st.secrets:
-    genai.configure(api_key=st.secrets["google"]["GEMINI_API_KEY"])
-else:
-    st.error("❌ ไม่พบ GEMINI_API_KEY ในระบบ Secrets กรุณาเซ็ตอัพค่าก่อนใช้งาน")
-    st.stop()
+st.title("🤖 AI Urban Wellness Assistant")
+st.write(
+    "AI ผู้ช่วยเลือกสวนสาธารณะ แนะนำกิจกรรมสุขภาพ "
+    "และสร้างโปรแกรมออกกำลังกายเฉพาะบุคคล"
+)
 
-# เรียกใช้สมองกลเวอร์ชัน Flash ที่ทำงานเร็วที่สุดและเสถียรที่สุดบนคลาวด์
-model = genai.GenerativeModel('gemini-1.5-flash')
+# ============================================================
+# GEMINI CONFIG
+# ============================================================
 
-# =====================================================================
-# 2. DATABASE CONNECTION & FETCH DATA
-# =====================================================================
+genai.configure(
+    api_key=st.secrets["google"]["GEMINI_API_KEY"]
+)
+
+model = genai.GenerativeModel("gemini-2.5-flash")
+
+# ============================================================
+# SNOWFLAKE CONNECTION
+# ============================================================
+
 @st.cache_resource
-def init_snowflake():
-    return snowflake.connector.connect(
+def init_snowflake_connection():
+
+    conn = snowflake.connector.connect(
         user=st.secrets["connections"]["snowflake"]["user"],
         password=st.secrets["connections"]["snowflake"]["password"],
         account=st.secrets["connections"]["snowflake"]["account"],
@@ -36,79 +46,273 @@ def init_snowflake():
         role=st.secrets["connections"]["snowflake"]["role"]
     )
 
-try:
-    ctx = init_snowflake()
-    df_parks = pd.read_sql("SELECT PARK_NAME, AREA FROM PARK_LAT_LONG", ctx)
-    df_parks.columns = [c.upper().strip() for c in df_parks.columns]
-    park_list = df_parks['PARK_NAME'].tolist()
-except Exception as e:
-    df_parks = pd.DataFrame({'PARK_NAME': ['สวนลุมพินี', 'สวนเบญจกิติ'], 'AREA': ['360 ไร่', '130 ไร่']})
-    park_list = ["สวนลุมพินี", "สวนเบญจกิติ", "สวนจตุจักร"]
+    class SnowflakeWrapper:
+        def __init__(self, connection):
+            self.conn = connection
 
-# =====================================================================
-# 3. INTERFACE BLOCK
-# =====================================================================
-tab_workout, tab_events = st.tabs(["🏋️‍♂️ สวนสวย + แผนวิ่งกินคลีนเฉพาะบุคคล", "📅 7-Day Upcoming BKK Health Events"])
+        def query(self, sql):
+            return pd.read_sql(sql, self.conn)
 
-# TAB 1: วิเคราะห์พื้นที่สวนและแนะนำร้านอาหาร
-with tab_workout:
-    st.subheader("🌲 ค้นหาแผนการออกกำลังกายที่แมตช์กับขนาดพื้นที่และจุดกินคลีน")
-    
-    col_in1, col_in2 = st.columns(2)
-    with col_in1:
-        selected_park = st.selectbox("🎯 วันนี้คุณกำลังจะไปสวนสาธารณะแห่งไหน:", park_list, key="park_select")
-    with col_in2:
-        fitness_goal = st.selectbox(
-            "💪 ระดับการฟิตร่างกายของคุณในวันนี้:",
-            ["สายเริ่มฝึกเดิน/วิ่งเหยาะเน้นกินลมชมวิว", "สายคาร์ดิโอเน้นเบิร์นไขมัน", "สายเล่นกล้ามเนื้อเวทสตรีทเอาต์"],
-            key="goal_select"
-        )
-    
-    if st.button("🚀 รันสมองกลประมวลผลพื้นที่", type="primary"):
-        park_info = df_parks[df_parks['PARK_NAME'] == selected_park].iloc[0]
-        park_area_text = park_info['AREA']
-        
-        prompt_input = f"""
-        คุณคือ AI ผู้เชี่ยวชาญด้านสุขภาพและผังเมืองกรุงเทพฯ ในโปรเจกต์ส่งเสริมพื้นที่สีเขียว
-        ช่วยวิเคราะห์และให้คำแนะนำสำหรับพิกัดนี้: {selected_park} ซึ่งมีขนาดพื้นที่ {park_area_text}
-        โดยผู้ใช้งานมีเป้าหมายคือ: {fitness_goal}
-        
-        โปรดตอบข้อมูลแบ่งเป็น 2 ส่วนหลักให้ชัดเจน:
-        1. [Custom Micro-Workout Plan] จงเอาขนาดพื้นที่สวน ({park_area_text}) มาพิจารณาร่วมด้วย หากสวนมีขนาดพื้นที่ใหญ่ ให้จัดโปรแกรมวิ่งระยะยาว คุมโซนหัวใจ แต่ถ้าสวนขนาดเล็ก ให้จัดโปรแกรมแบบ Bodyweight หรือ Street Workout ที่ใช้พื้นที่น้อยแทนให้สอดคล้องกับขนาดพื้นที่จริง
-        2. [Healthy Eats Nearby] แนะนำร้านอาหารสุขภาพ อาหารคลีน หรือสลัดบาร์ ที่ตั้งอยู่รอบๆ หรือใกล้เคียงสวน "{selected_park}" มาสัก 2-3 ร้าน พร้อมพิกัดและการเดินทางสั้นๆ
-        """
-        
-        with st.spinner("🧠 AI กำลังคำนวณสัดส่วนพื้นที่และวิเคราะห์เมนูกินคลีนบนระบบคลาวด์..."):
-            try:
-                response = model.generate_content(prompt_input)
-                st.info("🥦 **สรุปแผนออกกำลังกายและพิกัดร้านสุขภาพจาก AI**")
-                st.markdown(response.text)
-            except Exception as e:
-                st.error(f"เกิดข้อผิดพลาด: {e}")
+    return SnowflakeWrapper(conn)
 
-# TAB 2: ดึงกิจกรรมสุขภาพ Up-coming 7 วันข้างหน้าในกรุงเทพฯ
-with tab_events:
-    st.subheader("📅 เช็กตารางกิจกรรมวิ่ง งานสุขภาพ และเวิร์กช็อป รอบกรุงฯ 7 วันข้างหน้า")
-    
-    event_category = st.radio(
-        "🎯 เลือกประเภทงานที่คุณสนใจ:",
-        ["งานวิ่งมาราธอน/งานปั่นจักรยาน", "คลาสนิทรรศการและโยคะในสวน", "สัมมนาโภชนาการและตลาดนัดอาหาร Organic"],
-        horizontal=True
+sf_conn = init_snowflake_connection()
+
+# ============================================================
+# LOAD DATA
+# ============================================================
+
+@st.cache_data(ttl=600)
+def load_park_data():
+
+    query = """
+    SELECT
+        l.PARK_NAME,
+        l.AREA,
+        d.RUN_M
+    FROM PARK_LAT_LONG l
+    LEFT JOIN PARK_PATH_DISTANCE d
+        ON l.PARK_NAME = d.PARK_NAME
+    """
+
+    df = sf_conn.query(query)
+
+    df.columns = [
+        c.replace('"', '').upper().strip()
+        for c in df.columns
+    ]
+
+    return df
+
+df_parks = load_park_data()
+
+park_list = sorted(
+    df_parks["PARK_NAME"]
+    .dropna()
+    .unique()
+)
+
+# ============================================================
+# HELPER FUNCTION
+# ============================================================
+
+def ask_ai(prompt):
+
+    response = model.generate_content(prompt)
+
+    return response.text
+
+# ============================================================
+# TABS
+# ============================================================
+
+tab1, tab2 = st.tabs([
+    "🌳 Park Recommendation",
+    "🏃 Custom Workout Plan"
+])
+
+# ============================================================
+# TAB 1
+# ============================================================
+
+with tab1:
+
+    st.subheader(
+        "🌳 AI Park Recommendation + Healthy Food"
     )
-    
-    if st.button("🔍 ดึงข้อมูลตารางกิจกรรมล่าสุด", type="secondary"):
-        prompt_event = f"""
-        โปรดแนะนำรายการกิจกรรมสุขภาพ งานวิ่ง งานโยคะในสวน หรือตลาดนัดสุขภาพ ที่กำลังจะเกิดขึ้นจริงในกรุงเทพมหานคร ภายในกรอบระยะเวลา 7 วันข้างหน้า นับจากเดือนมิถุนายน ปี 2026 ในหมวดหมู่: {event_category}
-        ขอรายการอัปเดตที่เป็นประโยชน์สัก 3 งาน ระบุวัน-เวลา สถานที่จัดงาน และคำแนะนำการเตรียมตัวสั้นๆ
-        """
-        
-        with st.spinner("🌐 ดึงฐานข้อมูลกิจกรรมและกรองเทรนด์โดย AI..."):
+
+    selected_park = st.selectbox(
+        "เลือกสวนสาธารณะ",
+        park_list,
+        key="park_rec"
+    )
+
+    goal = st.selectbox(
+        "เป้าหมายการออกกำลังกาย",
+        [
+            "ลดน้ำหนัก",
+            "สุขภาพทั่วไป",
+            "เพิ่มความแข็งแรง",
+            "เตรียมวิ่งมาราธอน"
+        ]
+    )
+
+    if st.button(
+        "✨ วิเคราะห์สวนและแนะนำ",
+        type="primary"
+    ):
+
+        park_row = df_parks[
+            df_parks["PARK_NAME"] == selected_park
+        ].iloc[0]
+
+        area = park_row["AREA"]
+
+        run_m = park_row["RUN_M"]
+
+        prompt = f"""
+คุณเป็นผู้เชี่ยวชาญด้านสุขภาพ
+การออกกำลังกาย
+และพื้นที่สีเขียวในกรุงเทพมหานคร
+
+ข้อมูลสวน
+
+ชื่อสวน:
+{selected_park}
+
+ขนาดพื้นที่:
+{area}
+
+ระยะทางวิ่ง:
+{run_m} เมตร
+
+เป้าหมายของผู้ใช้งาน:
+{goal}
+
+โปรดตอบเป็นภาษาไทย
+
+1. เหตุผลที่สวนนี้เหมาะกับเป้าหมายดังกล่าว
+
+2. กิจกรรมออกกำลังกายที่เหมาะสม
+
+3. ข้อดีของพื้นที่และระยะทางวิ่ง
+
+4. แนวทางการรับประทานอาหารหลังออกกำลังกาย
+
+5. ตัวอย่างร้านอาหารสุขภาพหรือประเภทอาหารสุขภาพ
+ที่ควรมองหาใกล้สวนแห่งนี้
+"""
+
+        with st.spinner("🤖 AI กำลังวิเคราะห์..."):
+
             try:
-                response_ev = model.generate_content(prompt_event)
-                st.success("📊 **ตารางกิจกรรมเพื่อสุขภาพรอบกรุงเทพฯ (7 วันข้างหน้า)**")
-                st.markdown(response_ev.text)
+
+                result = ask_ai(prompt)
+
+                st.success("วิเคราะห์เสร็จแล้ว")
+
+                st.markdown(result)
+
             except Exception as e:
+
                 st.error(f"เกิดข้อผิดพลาด: {e}")
 
-st.write("---")
-st.caption("✨ DADS 5001 Project | Google Generative AI Cloud Core Integration")
+# ============================================================
+# TAB 2
+# ============================================================
+
+with tab2:
+
+    st.subheader(
+        "🏃 AI Custom Micro Workout Plan"
+    )
+
+    selected_park_workout = st.selectbox(
+        "เลือกสวน",
+        park_list,
+        key="workout_park"
+    )
+
+    fitness_level = st.selectbox(
+        "ระดับความฟิต",
+        [
+            "Beginner",
+            "Intermediate",
+            "Advanced"
+        ]
+    )
+
+    workout_time = st.slider(
+        "เวลาที่ต้องการออกกำลังกาย (นาที)",
+        15,
+        90,
+        30
+    )
+
+    if st.button(
+        "🔥 สร้าง Workout Plan",
+        type="primary"
+    ):
+
+        park_row = df_parks[
+            df_parks["PARK_NAME"]
+            == selected_park_workout
+        ].iloc[0]
+
+        area = park_row["AREA"]
+
+        run_m = park_row["RUN_M"]
+
+        prompt = f"""
+คุณเป็น Personal Trainer
+
+ข้อมูลสวน
+
+ชื่อสวน:
+{selected_park_workout}
+
+พื้นที่:
+{area}
+
+ระยะทางวิ่ง:
+{run_m} เมตร
+
+ระดับผู้ใช้งาน:
+{fitness_level}
+
+เวลาที่มี:
+{workout_time} นาที
+
+กติกา
+
+- ถ้าระยะทางวิ่งยาว
+ให้เน้น Running Program
+
+- ถ้าระยะทางวิ่งสั้น
+ให้เน้น Bodyweight Workout
+
+- ให้เลือกโปรแกรมให้เหมาะกับพื้นที่สวน
+
+โปรดตอบเป็นภาษาไทย
+
+1. Warm-up
+
+2. Main Workout
+
+3. Cool Down
+
+4. เวลาที่ใช้ในแต่ละช่วง
+
+5. Calories ที่คาดว่าจะเผาผลาญ
+
+6. ข้อควรระวัง
+"""
+
+        with st.spinner(
+            "🏃 AI กำลังออกแบบโปรแกรม..."
+        ):
+
+            try:
+
+                result = ask_ai(prompt)
+
+                st.success(
+                    "สร้างโปรแกรมสำเร็จ"
+                )
+
+                st.markdown(result)
+
+            except Exception as e:
+
+                st.error(
+                    f"เกิดข้อผิดพลาด: {e}"
+                )
+
+# ============================================================
+# FOOTER
+# ============================================================
+
+st.divider()
+
+st.caption(
+    "DADS5001 | Bangkok Public Park Analytics & AI Wellness Assistant"
+)
