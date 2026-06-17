@@ -2,7 +2,7 @@ import streamlit as st
 
 st.set_page_config(page_title="BKK Park & Air Quality Dashboard", layout="wide")
 
-st.title("🏙️ ASEAN Urban Growth & Air Quality Project")
+st.title("🏙️ BKK Park & Air Quality Project")
 st.write("ยินดีต้อนรับเข้าสู่แดชบอร์ดวิเคราะห์ข้อมูลสวนสาธารณะใน กทม. และค่าฝุ่น PM2.5")
 
 st.info("👈 กรุณาเลือกหน้าต่างที่ต้องการวิเคราะห์จากเมนูด้านซ้ายได้เลยครับ")
