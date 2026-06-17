@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
-from scipy.spatial.distance import cdist
 
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Analytics - Public Transport", layout="wide")
@@ -11,24 +10,21 @@ st.title("📊 Page 3: Analytics - Public Transport Connectivity")
 st.write("วิเคราะห์ความสัมพันธ์ระหว่างขนาดของสวนสาธารณะ ระยะห่างจากระบบขนส่งมวลชน (BTS/MRT) และความหนาแน่นของผู้ใช้งาน")
 
 # =====================================================================
-# 1. DATABASE CONNECTION & DATA LOADING (Snowflake)
+# 1. DATA LOADING (ดึงค่าจาก sf_conn ตัวหลักของคุณ)
 # =====================================================================
 @st.cache_data(ttl=600)
 def load_analytics_data():
-    # ดึงข้อมูลจาก Snowflake บังคับฟิลด์ที่ต้องใช้ในการคำนวณ
     df_park = sf_conn.query("SELECT NAME, AREA_RAI, USAGE_DENSITY FROM PARK")
     df_lat_long = sf_conn.query("SELECT PARK_NAME, LAT, LNG FROM PARK_LAT_LONG")
-    
     df_bts = sf_conn.query("SELECT STATION_NAME, LAT, LNG FROM BTS")
     df_mrt = sf_conn.query("SELECT STATION_NAME, LAT, LNG FROM MRT")
     
-    # ล้างคราบเครื่องหมายคำพูดคู่และแปลงเป็นพิมพ์ใหญ่ทันทีต้นทาง
+    # ล้างคราบเครื่องหมายคำพูดและทำเป็นพิมพ์ใหญ่
     df_park.columns = [c.replace('"', '').upper().strip() for c in df_park.columns]
     df_lat_long.columns = [c.replace('"', '').upper().strip() for c in df_lat_long.columns]
     df_bts.columns = [c.replace('"', '').upper().strip() for c in df_bts.columns]
     df_mrt.columns = [c.replace('"', '').upper().strip() for c in df_mrt.columns]
     
-    # รวมตารางรถไฟฟ้า BTS และ MRT
     df_bts['TRAIN_TYPE'] = 'BTS'
     df_mrt['TRAIN_TYPE'] = 'MRT'
     df_trains = pd.concat([df_bts, df_mrt], ignore_index=True)
@@ -38,14 +34,14 @@ def load_analytics_data():
 try:
     df_p, df_ll, df_trains = load_analytics_data()
     
-    # ป้องกันเรื่องชื่อคอลหักไม่ตรงกัน โดยการอ้างอิงอิงตามตำแหน่ง Index แรก (เหมือนหน้า 2)
+    # รวมร่างตารางสวนกับพิกัด
     df_analytics = df_p.merge(df_ll, left_on=df_p.columns[0], right_on=df_ll.columns[0], how='inner')
     
     # =====================================================================
-    # 2. GEOSPATIAL CALCULATIONS (ใช้ Pandas คำนวณเพียวๆ ไร้ DuckDB)
+    # 2. GEOSPATIAL CALCULATIONS (คำนวณระยะทาง)
     # =====================================================================
     def haversine_distance(lat1, lon1, lat2, lon2):
-        r = 6371  # รัศมีโลก (กิโลเมตร)
+        r = 6371
         phi1, phi2 = np.radians(lat1), np.radians(lat2)
         delta_phi = np.radians(lat2 - lat1)
         delta_lambda = np.radians(lon2 - lon1)
@@ -55,11 +51,10 @@ try:
     min_distances_m = []
     for idx, row in df_analytics.iterrows():
         distances = haversine_distance(row['LAT'], row['LNG'], df_trains['LAT'], df_trains['LNG'])
-        min_distances_m.append(distances.min() * 1000)  # แปลงกิโลเมตรเป็นเมตร
+        min_distances_m.append(distances.min() * 1000)
         
     df_analytics['DIST_TO_TRAIN_M'] = min_distances_m
 
-    # จัดกลุ่มความใกล้-ไกลจากสถานีรถไฟฟ้าตามเกณฑ์
     def categorize_distance(meters):
         if meters < 500: return "ใกล้ (น้อยกว่า 500 เมตร)"
         elif 500 <= meters <= 1500: return "ปานกลาง (500 ม. - 1.5 กม.)"
@@ -68,14 +63,12 @@ try:
     df_analytics['DISTANCE_CATEGORY'] = df_analytics['DIST_TO_TRAIN_M'].apply(categorize_distance)
 
     # =====================================================================
-    # 3. VISUALIZATION LAYOUT
+    # 3. VISUALIZATIONS
     # =====================================================================
     col1, col2 = st.columns(2)
 
     with col1:
         st.subheader("📌 ขนาดของสวน vs ระยะห่างจากสถานีรถไฟฟ้า")
-        
-        # วาด Scatter Plot ตรวจสอบสมมติฐาน
         fig_scatter = px.scatter(
             df_analytics,
             x="DIST_TO_TRAIN_M",
@@ -87,7 +80,6 @@ try:
                 "AREA_RAI": "ขนาดพื้นที่สวน (ไร่)",
                 "USAGE_DENSITY": "ความหนาแน่นผู้ใช้งาน"
             },
-            color_discrete_sequence=px.colors.qualitative.Safe,
             title="ความสัมพันธ์ของขนาดสวน พิกัดราง และความหนาแน่น"
         )
         fig_scatter.update_layout(template="plotly_white")
@@ -95,9 +87,6 @@ try:
 
     with col2:
         st.subheader("🍕 สัดส่วนระยะห่างของสวนทั้งหมดจาก BTS/MRT")
-        st.write("") 
-        
-        # นับจำนวนสวนเพื่อทำ Pie Chart
         df_pie = df_analytics['DISTANCE_CATEGORY'].value_counts().reset_index()
         df_pie.columns = ['🔄 ระดับความใกล้', '📊 จำนวนสวน']
         
@@ -105,14 +94,17 @@ try:
             df_pie,
             values="📊 จำนวนสวน",
             names="🔄 ระดับความใกล้",
-            hole=0.4,  # ทำเป็น Donut Chart ทรงทันสมัย
-            color_discrete_sequence=px.colors.qualitative.Pastel,
+            hole=0.4,
             title="การกระจายตัวตามเกณฑ์ระยะทางเดินเท้าสู่รถไฟฟ้า"
         )
         fig_pie.update_layout(template="plotly_white")
         st.plotly_chart(fig_pie, use_container_width=True)
 
-    # แสดงตารางสรุปข้อมูลด้านล่างเชิงวิเคราะห์
     st.subheader("📋 ตารางสรุปข้อมูลเชิงวิเคราะห์เพื่อตรวจสอบสมมติฐาน")
     st.dataframe(
-        df_analytics
+        df_analytics[['NAME', 'AREA_RAI', 'DIST_TO_TRAIN_M', 'DISTANCE_CATEGORY', 'USAGE_DENSITY']].sort_values(by="AREA_RAI", ascending=False),
+        use_container_width=True
+    )
+
+except Exception as e:
+    st.error(f"❌ เกิดข้อผิดพลาดในการรันหน้าวิเคราะห์: {e}")
