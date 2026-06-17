@@ -275,7 +275,25 @@ with col_list:
                     label=f"😷 PM2.5 ล่าสุด ({park['NEAREST_AIR_STATION']})", 
                     value=f"{park['LATEST_PM25']} µg/m³" if not pd.isna(park['LATEST_PM25']) else "N/A"
                 )
-                st.write(f"🏃 **ระยะทางลู่วิ่ง:** {park['RUN_M']:,} เมตร")
+                
+
+
+                # ดักจับค่าที่เป็นเครื่องหมายขีด หรือค่าว่าง
+                run_m_raw = str(park['RUN_M']).strip()
+
+                if run_m_raw == '-' or run_m_raw == '0' or run_m_raw.lower() == 'nan' or not run_m_raw:
+                    st.write("🏃 **ระยะทางลู่วิ่ง:** ไม่มีลู่วิ่ง")
+                else:
+                    try:
+                        # ถ้าเป็นตัวเลขปกติ ให้แปลงแล้วใส่คอมม่าตามฟอร์แมตเดิม
+                        run_m_val = float(run_m_raw)
+                        st.write(f"🏃 **ระยะทางลู่วิ่ง:** {run_m_val:,.0f} เมตร")
+                    except Exception:
+                        # เผื่อกรณีหลุดข้อความอื่น ๆ จะได้ไม่พัง
+                        st.write(f"🏃 **ระยะทางลู่วิ่ง:** {run_m_raw}")
+
+
+                
                 st.write(f"🚇 **สถานีใกล้สุด:** {park['NEAREST_TRAIN_STATION']} ({park['DIST_TO_TRAIN_KM']*1000:.0f} เมตร)")
                 
                 amenity_list = []
