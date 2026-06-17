@@ -2,56 +2,62 @@ import streamlit as st
 
 st.set_page_config(page_title="BKK Park Finder - Home", layout="wide")
 
-# --- HEADER SECTION ---
+# --- HEADER: ชัดเจน ทันสมัย ---
 st.title("🌲 BKK Urban Green Spaces & Connectivity")
-st.subheader("ยกระดับคุณภาพชีวิตคนเมือง เลือกสวนที่ใช่ ในวันที่อากาศเป็นใจ")
+st.markdown("##### ระบบบูรณาการฐานข้อมูลพื้นที่สีเขียว โครงข่ายรถไฟฟ้า และดัชนีคุณภาพอากาศกรุงเทพมหานคร")
 st.write("---")
 
-# --- SECTION 1: MOTIVATION & PAIN POINT ---
-col1, col2 = st.columns([2, 1])
+# --- SECTION 1: 3 แกนหลักของข้อมูล (โชว์ความเท่ของ Data Architecture) ---
+st.markdown("### 🛠️ Data Architecture")
+st.write("โปรเจกต์นี้เกิดจากการเชื่อมโยง 3 แหล่งข้อมูลเพื่อตอบโจทย์คนเมือง")
 
-with col1:
+m_col1, m_col2, m_col3 = st.columns(3)
+
+with m_col1:
+    st.metric(label="🍀 สวนสาธารณะ (Snowflake)", value="40+ สวน", delta="คัดกรองพิกัดจริง")
+with m_col2:
+    st.metric(label="🚊 โครงข่ายราง (Snowflake)", value="BTS & MRT", delta="คำนวณระยะทางเดินเท้า")
+with m_col3:
+    st.metric(label="😷 ดัชนีฝุ่น (MongoDB)", value="Real-time", delta="Air4Thai API ล่าสุด")
+
+st.write("---")
+
+# --- SECTION 2: ปัญหาและแนวคิด (สั้นกระชับ ไม่ยืดเยื้อ) ---
+col_left, col_right = st.columns([5, 4])
+
+with col_left:
+    st.markdown("### ❓ Why This App?")
     st.markdown("""
-    ### 🏃‍♂️ มิติใหม่แห่งการวางแผนพักผ่อนในกรุงเทพฯ
-    ในเมืองหลวงที่เร่งรีบอย่างกรุงเทพมหานคร การมองหาพื้นที่สีเขียวเพื่อผ่อนคลายหรือออกกำลังกาย มักมาพร้อมกับคำถามมากมาย:
-    * *สวนสาธารณะแถวนี้เดินทางสะดวกไหม? มีรถไฟฟ้า BTS/MRT ผ่านหรือเปล่า?*
-    * *วันนี้ค่าฝุ่น PM2.5 หนาแน่นเกินกว่าจะไปวิ่งหรือเปล่า?*
+    > **"จะออกไปวิ่งทั้งที ต้องเดินทางสะดวกและอากาศต้องปลอดภัย"**
     
-    โปรเจกต์นี้จึงเกิดขึ้นมาเพื่อเปลี่ยน **Data** ให้เป็น **Actionable Insights** เชื่อมโยงข้อมูลเชิงพื้นที่จาก **Snowflake** และข้อมูลฝุ่นแบบ Real-time จาก **MongoDB** เพื่อให้คุณเลือกจุดหมายปลายทางที่ดีที่สุดสำหรับสุขภาพของคุณ
+    กรุงเทพฯ มีพื้นที่สีเขียวจำกัด และมักประสบปัญหาฝุ่น **PM2.5** บ่อยครั้ง แอปพลิเคชันนี้จึงออกแบบมาเพื่อแก้ปัญหานั้นโดยการรวมข้อมูลเชิงพื้นที่และการเดินทางมารวมไว้ในที่เดียว เพื่อให้ทุกคนสามารถค้นหาสถานที่พักผ่อนที่ตอบโจทย์ชีวิตประจำวันได้จริง
     """)
 
-with col2:
-    # ส่วนนี้สามารถใส่สถิติตัวเลขสำคัญ (Key Metrics) แบบภาพรวมได้
-    st.info("💡 **Did you know?**\n\nมาตรฐานองค์การอนามัยโลก (WHO) กำหนดให้เมืองควรมีพื้นที่สีเขียวอย่างน้อย **9 ตารางเมตรต่อคน** มาร่วมสำรวจกันว่ากรุงเทพฯ ของเรามีการกระจายตัวของสวนสาธารณะอย่างไรบ้าง ผ่านแอปพลิเคชันนี้")
+with col_right:
+    st.markdown("### 🗂️ เทคโนโลยีที่เลือกใช้ในโปรเจกต์")
+    # ใช้แผ่นป้ายสี่สีช่วยตัดความน่าเบื่อ
+    st.success("**Snowflake**: จัดเก็บข้อมูลโครงสร้างหลัก (Relational Data) ของสวนและสถานีรถไฟฟ้า")
+    st.warning("**MongoDB**: จัดเก็บข้อมูลฝุ่นดิบรูปแบบ JSON ที่ดึงมาจาก API ทุก ๆ ชั่วโมง")
+    st.info("**Pandas & Scipy**: คำนวณระยะห่างทางภูมิศาสตร์ (Spatial Distance Matrix) ระหว่างจุดต่อจุด")
 
 st.write("---")
 
-# --- SECTION 2: APP NAVIGATION (แนะนำฟังก์ชัน)
-st.markdown("### 🗺️ แนะนำฟังก์ชันการใช้งาน (App Guide)")
+# --- SECTION 3: สารบัญหน้าย่อย (เหมือนกล่องกดเลือกฟังก์ชัน) ---
+st.markdown("### 🖥️ สารบัญฟังก์ชันการใช้งาน (App Directory)")
 
-guide_col1, guide_col2 = st.columns(2)
+page_col1, page_col2 = st.columns(2)
 
-with guide_col1:
-    st.markdown("""
-    #### 🔍 [Page 2] Park Finder & Air Quality
-    **ระบบค้นหาสวนและตรวจเช็กสภาพอากาศ**
-    * ค้นหาและคัดกรองสวนสาธารณะในกรุงเทพฯ ตามพิกัดจริง
-    * ดึงค่าฝุ่น PM2.5 แบบเรียลไทม์จาก **Air4Thai API** ผ่านระบบจัดการของ **MongoDB**
-    * คำนวณจับคู่สถานีวัดฝุ่นที่อยู่ใกล้สวนแห่งนั้นที่สุดโดยอัตโนมัติ เพื่อความปลอดภัยก่อนออกเดินทาง
-    """)
-    if st.button("เปิดหน้าค้นหาสวน 🌲"):
-        st.info("👈 สามารถกดเลือกหน้า 'Page 2' ที่แถบเมนูด้านซ้ายมือได้เลยครับ")
+with page_col1:
+    with st.container(border=True): # สร้างกล่องล้อมรอบเพิ่มมิติ
+        st.markdown("#### 🔍 Page 2: Park Finder & Air Quality")
+        st.write("ระบบ Map-Based ค้นหาสวน คัดกรองขนาดพื้นที่ และจับคู่สถานีตรวจฝุ่นที่อยู่ใกล้ที่สุดโดยอัตโนมัติ เพื่อเช็กสภาพอากาศก่อนออกจากบ้าน")
+        st.caption("🎯 เน้นการใช้งานจริง (Operational Dashboard)")
 
-with guide_col2:
-    st.markdown("""
-    #### 📊 [Page 3] Public Transport Connectivity
-    **หน้าวิเคราะห์ความเชื่อมโยงเชิงพื้นที่**
-    * วิเคราะห์ความสัมพันธ์ระหว่างขนาดพื้นที่สวน (ตารางเมตร) กับระยะห่างจากโครงข่ายราง (BTS/MRT)
-    * พิสูจน์สมมติฐานเรื่องความหนาแน่นของผู้ใช้งาน (Usage Density) ผ่านกราฟ Scatter Plot
-    * ดูสัดส่วนการกระจายตัวของสวนในกรุงเทพฯ ว่าส่วนใหญ่หลบซ่อนอยู่ใกล้หรือไกลรถไฟฟ้า ผ่านหน้าเค้ก Pie Chart
-    """)
-    if st.button("เปิดหน้าวิเคราะห์เชิงลึก 📊"):
-        st.info("👈 สามารถกดเลือกหน้า 'Page 3' ที่แถบเมนูด้านซ้ายมือได้เลยครับ")
+with page_col2:
+    with st.container(border=True):
+        st.markdown("#### 📊 Page 3: Analytics & Connectivity")
+        st.write("หน้าวิเคราะห์ความสัมพันธ์เชิงสถิติ (Scatter Plot) ระหว่างขนาดสวนกับระยะห่างสถานีรถไฟฟ้า พร้อม Pie Chart ดูสัดส่วนการเข้าถึงระบบราง")
+        st.caption("🎯 เน้นการหาอินไซต์ (Analytical Insights)")
 
 st.write("---")
-st.caption("DADS 5001 - Data Systems and Toolchains Project | 2026")
+st.caption("DADS 5001 - Data Analytics and Data Science Tools and Programming Project | 2026")
