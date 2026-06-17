@@ -9,8 +9,9 @@ model = genai.GenerativeModel("gemini-2.5-flash")
 
 st.title("AI Test")
 
-question = st.text_input("Ask something")
+if st.button("Test AI"):
+    response = model.generate_content(
+        "Say hello in Thai."
+    )
 
-if st.button("Run"):
-    response = model.generate_content(question)
     st.write(response.text)
