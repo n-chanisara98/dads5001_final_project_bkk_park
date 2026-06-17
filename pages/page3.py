@@ -2,6 +2,8 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import plotly.express as px
+import snowflake.connector
+from scipy.spatial.distance import cdist
 
 # ตั้งค่าหน้าเว็บ
 st.set_page_config(page_title="Analytics - Public Transport", layout="wide")
@@ -10,7 +12,36 @@ st.title("📊 Page 3: Analytics - Public Transport Connectivity")
 st.write("วิเคราะห์ความสัมพันธ์ระหว่างขนาดของสวนสาธารณะ ระยะห่างจากระบบขนส่งมวลชน (BTS/MRT) และความหนาแน่นของผู้ใช้งาน")
 
 # =====================================================================
-# 1. DATA LOADING (ดึงค่าจาก sf_conn ตัวหลักของคุณ)
+# 1. DATABASE CONNECTION (ดึงค่าปลอดภัยผ่าน st.secrets แบบเดียวกับหน้า 2)
+# =====================================================================
+@st.cache_resource
+def init_snowflake_connection():
+    ctx = snowflake.connector.connect(
+        user=st.secrets["connections"]["snowflake"]["user"],
+        password=st.secrets["connections"]["snowflake"]["password"],
+        account=st.secrets["connections"]["snowflake"]["account"],
+        warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
+        database=st.secrets["connections"]["snowflake"]["database"],
+        schema=st.secrets["connections"]["snowflake"]["schema"],
+        role=st.secrets["connections"]["snowflake"]["role"]
+    )
+    class SnowflakeWrapper:
+        def __init__(self, connection):
+            self.conn = connection
+        def query(self, sql):
+            return pd.read_sql(sql, self.conn)
+            
+    return SnowflakeWrapper(ctx)
+
+# เรียกใช้งานการเชื่อมต่อสำหรับหน้า 3
+try:
+    sf_conn = init_snowflake_connection()
+except Exception as e:
+    st.error(f"❌ ไม่สามารถเชื่อมต่อ Snowflake ได้: {e}")
+    st.stop()
+
+# =====================================================================
+# 2. DATA LOADING & CLEANING
 # =====================================================================
 @st.cache_data(ttl=600)
 def load_analytics_data():
@@ -34,11 +65,11 @@ def load_analytics_data():
 try:
     df_p, df_ll, df_trains = load_analytics_data()
     
-    # รวมร่างตารางสวนกับพิกัด
+    # รวมร่างตารางสวนกับพิกัด อ้างอิงตามตำแหน่ง Index แรกเพื่อความชัวร์
     df_analytics = df_p.merge(df_ll, left_on=df_p.columns[0], right_on=df_ll.columns[0], how='inner')
     
     # =====================================================================
-    # 2. GEOSPATIAL CALCULATIONS (คำนวณระยะทาง)
+    # 3. GEOSPATIAL CALCULATIONS (คำนวณระยะทางไปสถานีรถไฟฟ้า)
     # =====================================================================
     def haversine_distance(lat1, lon1, lat2, lon2):
         r = 6371
@@ -63,7 +94,7 @@ try:
     df_analytics['DISTANCE_CATEGORY'] = df_analytics['DIST_TO_TRAIN_M'].apply(categorize_distance)
 
     # =====================================================================
-    # 3. VISUALIZATIONS
+    # 4. VISUALIZATIONS
     # =====================================================================
     col1, col2 = st.columns(2)
 
