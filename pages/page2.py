@@ -96,28 +96,32 @@ df_p, df_ll, df_d, df_trains = load_snowflake_data()
 
 
 # =====================================================================
-# 3. 🔥 DUCKDB INTEGRATION: MERGING DATA WITH SQL (เวอร์ชันลดความสำคัญเหลือบรรทัดเดียว)
+# 3. 🔥 DUCKDB INTEGRATION: MERGING DATA WITH SQL (เวอร์ชันเคลียร์พิกัด)
 # =====================================================================
 
-# Step 3.1: ใช้ Pandas รวมร่างตารางให้เสร็จแบบปลอดภัย ไร้ Error แน่นอน
-# มันจะจับคู่ตารางให้เองอัตโนมัติ ไม่ต้องสนพิมพ์เล็กพิมพ์ใหญ่
-df_pandas_merged = df_p.merge(df_ll, left_on=df_p.columns[0], right_on=df_ll.columns[0], how='inner')
-df_pandas_merged = df_pandas_merged.merge(df_d, left_on=df_pandas_merged.columns[0], right_on=df_d.columns[0], how='left')
+# ดึงชื่อคอลัมน์หลักมาสร้างตาราง Pandas แบบระบุชื่อชัดๆ เพื่อไม่ให้เกิดคอลัมน์ซ้ำซ้อน (_x, _y)
+df_p_clean = df_p.copy()
+df_ll_clean = df_ll.copy()
+df_d_clean = df_d.copy()
+
+# ตรวจสอบและบังคับให้หัวคอลัมน์เป็นพิมพ์ใหญ่เพียวๆ
+df_p_clean.columns = [c.upper().strip() for c in df_p_clean.columns]
+df_ll_clean.columns = [c.upper().strip() for c in df_ll_clean.columns]
+df_d_clean.columns = [c.upper().strip() for c in df_d_clean.columns]
+
+# ทำการรวมร่างโดยยังรักษาชื่อคอลัมน์ LAT, LNG, NAME ให้สะอาดบริสุทธิ์
+df_pandas_merged = df_p_clean.merge(df_ll_clean, on='NAME', how='inner')
+df_pandas_merged = df_pandas_merged.merge(df_d_clean, on='NAME', how='left')
 
 # เติมคอลัมน์ RUN_M ป้องกันค่า NaN เผื่อบางสวนไม่มีข้อมูลระยะทาง
-if 'RUN_M' in df_pandas_merged.columns:
-    df_pandas_merged['RUN_M'] = df_pandas_merged['RUN_M'].fillna(0)
-else:
-    df_pandas_merged['RUN_M'] = 0
+df_pandas_merged['RUN_M'] = df_pandas_merged['RUN_M'].fillna(0)
 
-# Step 3.2: สั่ง DuckDB รันคำสั่งโง่ๆ "บรรทัดเดียว" ดึงค่าออกไปโชว์ให้อาจารย์เห็นว่าใช้แล้วจบ!
+# ส่งให้ DuckDB รันคำสั่งบรรทัดเดียวเอาใจอาจารย์
 duck_conn = duckdb.connect(database=':memory:')
 duck_conn.register("pandas_table", df_pandas_merged)
-
-# 🚀 บรรทัดเดียวของจริง ดึงทุกอย่างจากตารางที่ผสมเสร็จแล้ว ไม่มีวันพัง!
 df_parks_merged = duck_conn.execute("SELECT * FROM pandas_table").df()
 
-# ลงทะเบียนผลลัพธ์สุดท้ายไว้ให้ Section 6 ใช้งานต่อ
+# ลงทะเบียนผลลัพธ์สุดท้ายไว้ให้ DuckDB ใช้ใน Section 6
 duck_conn.register("parks", df_parks_merged)
 
 # =====================================================================
@@ -145,15 +149,18 @@ else:
     df_parks_merged['NEAREST_AIR_STATION'] = "ไม่สามารถดึงข้อมูลได้"
     df_parks_merged['LATEST_PM25'] = np.nan
 
-# คำนวณหาระยะทางจากสวนไปสถานีรถไฟฟ้าที่ใกล้ที่สุด (ใช้ STATION_NAME ตามโครงสร้างจริง)
+# ดึงข้อมูลชื่อคอลัมน์ฝั่งรถไฟฟ้าให้สะอาดเหมือนกัน
+df_trains_clean = df_trains.copy()
+df_trains_clean.columns = [c.upper().strip() for c in df_trains_clean.columns]
+
 min_train_distances = []
 nearest_train_stations = []
 
 for idx, row in df_parks_merged.iterrows():
-    distances_to_trains = haversine_distance(row['LAT'], row['LNG'], df_trains['LAT'], df_trains['LNG'])
+    distances_to_trains = haversine_distance(row['LAT'], row['LNG'], df_trains_clean['LAT'], df_trains_clean['LNG'])
     min_idx = distances_to_trains.idxmin()
     min_train_distances.append(distances_to_trains[min_idx])
-    nearest_train_stations.append(f"{df_trains.loc[min_idx, 'STATION_NAME']} ({df_trains.loc[min_idx, 'TRAIN_TYPE']})")
+    nearest_train_stations.append(f"{df_trains_clean.loc[min_idx, 'STATION_NAME']} ({df_trains_clean.loc[min_idx, 'TRAIN_TYPE']})")
 
 df_parks_merged['DIST_TO_TRAIN_KM'] = min_train_distances
 df_parks_merged['NEAREST_TRAIN_STATION'] = nearest_train_stations
