@@ -181,7 +181,7 @@ with tab1:
             park_type = "สวนขนาดใหญ่"
 
         prompt = f"""
-prompt = f"""
+
 คุณคือ Personal Trainer และ Running Coach
 
 ข้อมูลผู้ใช้งาน
