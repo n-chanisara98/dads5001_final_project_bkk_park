@@ -48,7 +48,7 @@ page_col1, page_col2, page_col3 = st.columns(3)
 
 with page_col1:
     with st.container(border=True): # หน้า 1
-        st.markdown("#### 🏠 Page 1: Overview & Data Management")
+        st.markdown("#### 🏠 Page 1: Overview & Park Analytics")
         st.write("วิเคราะห์ภาพรวมขนาดพื้นที่สีเขียวรวมรายเขต พฤติกรรมการใช้งาน และความพร้อมเชิงสันทนาการ (Amenities)")
 
 with page_col2:
