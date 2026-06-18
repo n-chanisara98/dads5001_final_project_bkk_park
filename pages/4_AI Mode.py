@@ -217,10 +217,9 @@ def init_snowflake_connection():
         database=st.secrets["connections"]["snowflake"]["database"],
         schema=st.secrets["connections"]["snowflake"]["schema"],
         role=st.secrets["connections"]["snowflake"]["role"],
-        client_session_keep_alive=True  # เปิดท่อทิ้งไว้เพื่อลดโอกาสสายหลุด
+        client_session_keep_alive=True
     )
 
-    # 🛡️ ระบบตรวจจับและ Reconnect คืนชีพ Session อัตโนมัติ
     class SnowflakeWrapper:
         def __init__(self, connection):
             self.conn = connection
@@ -535,7 +534,7 @@ with tab2:
             "ควรวิ่งกี่ครั้งต่อสัปดาห์",
             "PM2.5 ระดับไหนไม่ควรวิ่ง",
             "เดินเร็วหรือวิ่งเผาผลาญมากกว่า",
-            "หลังวิ่งควรกินอะไร",
+            "หลังวิ่งควกลินอะไร",
             "วอร์มอัพก่อนวิ่งอย่างไร",
             "วิ่งตอนเช้าหรือตอนเย็นดีกว่า",
             "มือใหม่ควรเริ่มวิ่งอย่างไร",
@@ -635,4 +634,16 @@ with tab2:
                     """, unsafe_allow_html=True)
 
                     st.markdown(result)
-                    st.markdown
+                    st.markdown("</div>", unsafe_allow_html=True)
+                except Exception as e:
+                    st.error(f"เกิดข้อผิดพลาด: {e}")
+
+# ============================================================
+# FOOTER
+# ============================================================
+
+st.divider()
+
+st.caption(
+    "DADS5001 | Data Analytics and Data Science Tools and Programming"
+)
