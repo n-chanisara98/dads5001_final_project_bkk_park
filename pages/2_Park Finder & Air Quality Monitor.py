@@ -250,11 +250,17 @@ def refresh_and_get_pm25():
                 pm25_dict = aqi_last.get("PM25", {}) if isinstance(aqi_last, dict) else {}
                 pm25_val = pm25_dict.get("value") if isinstance(pm25_dict, dict) else None
 
+                # ดึงค่าวันที่และเวลาของสถานีนี้ออกมาก่อน append
+                aqi_last = station.get("AQILast", {})
+                meas_date = aqi_last.get("date", "ไม่ระบุ")
+                meas_time = aqi_last.get("time", "ไม่ระบุ")
+                
                 stations_list.append({
                     "station_name": station.get("nameTH"),
                     "station_lat": float(station.get("lat")),
                     "station_lon": float(station.get("long")),
-                    "pm25": float(pm25_val) if pm25_val is not None and str(pm25_val).strip() != "-1" else np.nan
+                    "pm25": float(pm25_val) if pm25_val is not None and str(pm25_val).strip() != "-1" else np.nan,
+                    "updated_time": f"{meas_date} {meas_time}"
                 })
 
             except (ValueError, TypeError, AttributeError):
@@ -341,9 +347,11 @@ if not df_stations_pm25.empty and not df_parks_merged.empty:
 
     df_parks_merged["NEAREST_AIR_STATION"] = df_stations_pm25["station_name"].iloc[closest_air_indices].values
     df_parks_merged["LATEST_PM25"] = df_stations_pm25["pm25"].iloc[closest_air_indices].values
+    df_parks_merged["AIR_UPDATED_TIME"] = df_stations_pm25["updated_time"].iloc[closest_air_indices].values
 else:
     df_parks_merged["NEAREST_AIR_STATION"] = "ไม่มีข้อมูลสถานี"
     df_parks_merged["LATEST_PM25"] = np.nan
+    df_parks_merged["AIR_UPDATED_TIME"] = "ไม่มีข้อมูล"
 
 
 min_train_distances = []
@@ -552,6 +560,7 @@ with col_map:
             hover_name="NAME",
             hover_data={
                 "LATEST_PM25": ":.1f",
+                "AIR_UPDATED_TIME": True,
                 "NEAREST_AIR_STATION": True,
                 "NEAREST_TRAIN_STATION": True,
                 "DIST_TO_TRAIN_M": ":,.0f",
@@ -610,7 +619,7 @@ with col_list:
 
             with st.expander(f"🌳 {park['NAME']}"):
                 st.markdown(f"**⏰ เวลาเปิด-ปิด:** {park['OPEN']} - {park['CLOSE']}")
-                st.markdown(f"**😷 PM2.5 ล่าสุด:** {pm25_display}")
+                st.markdown(f"**😷 PM2.5 ล่าสุด:** {pm25_display} ({air_time})")
                 st.markdown(f"**🏢 สถานีวัดฝุ่นใกล้สุด:** {park['NEAREST_AIR_STATION']}")
                 st.markdown(f"**🚇 สถานีรถไฟฟ้าใกล้สุด:** {park['NEAREST_TRAIN_STATION']} ({train_m:.0f} เมตร)")
 
