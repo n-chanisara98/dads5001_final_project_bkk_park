@@ -209,7 +209,6 @@ model = genai.GenerativeModel("gemini-2.5-flash")
 
 @st.cache_resource
 def init_snowflake_connection():
-
     conn = snowflake.connector.connect(
         user=st.secrets["connections"]["snowflake"]["user"],
         password=st.secrets["connections"]["snowflake"]["password"],
@@ -217,19 +216,44 @@ def init_snowflake_connection():
         warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
         database=st.secrets["connections"]["snowflake"]["database"],
         schema=st.secrets["connections"]["snowflake"]["schema"],
-        role=st.secrets["connections"]["snowflake"]["role"]
+        role=st.secrets["connections"]["snowflake"]["role"],
+        client_session_keep_alive=True  # เปิดท่อทิ้งไว้เพื่อลดโอกาสสายหลุด
     )
 
+    # 🛡️ ระบบตรวจจับและ Reconnect คืนชีพ Session อัตโนมัติ
     class SnowflakeWrapper:
         def __init__(self, connection):
             self.conn = connection
 
         def query(self, sql):
-            return pd.read_sql(sql, self.conn)
+            try:
+                if self.conn.is_closed():
+                    st.cache_resource.clear()
+                    sf_wrapper_new = init_snowflake_connection()
+                    self.conn = sf_wrapper_new.conn
+                return pd.read_sql(sql, self.conn)
+            except Exception:
+                st.cache_resource.clear()
+                ctx_fallback = snowflake.connector.connect(
+                    user=st.secrets["connections"]["snowflake"]["user"],
+                    password=st.secrets["connections"]["snowflake"]["password"],
+                    account=st.secrets["connections"]["snowflake"]["account"],
+                    warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
+                    database=st.secrets["connections"]["snowflake"]["database"],
+                    schema=st.secrets["connections"]["snowflake"]["schema"],
+                    role=st.secrets["connections"]["snowflake"]["role"],
+                    client_session_keep_alive=True
+                )
+                self.conn = ctx_fallback
+                return pd.read_sql(sql, self.conn)
 
     return SnowflakeWrapper(conn)
 
-sf_conn = init_snowflake_connection()
+try:
+    sf_conn = init_snowflake_connection()
+except Exception as e:
+    st.error(f"❌ ไม่สามารถเชื่อมต่อ Snowflake ได้: {e}")
+    st.stop()
 
 # ============================================================
 # LOAD DATA
@@ -237,7 +261,6 @@ sf_conn = init_snowflake_connection()
 
 @st.cache_data(ttl=600)
 def load_park_data():
-
     query = """
     SELECT
         l.PARK_NAME,
@@ -247,23 +270,23 @@ def load_park_data():
     LEFT JOIN PARK_PATH_DISTANCE d
         ON l.PARK_NAME = d.PARK_NAME
     """
-
     df = sf_conn.query(query)
-
     df.columns = [
         c.replace('"', '').upper().strip()
         for c in df.columns
     ]
-
     return df
 
-df_parks = load_park_data()
-
-park_list = sorted(
-    df_parks["PARK_NAME"]
-    .dropna()
-    .unique()
-)
+try:
+    df_parks = load_park_data()
+    park_list = sorted(
+        df_parks["PARK_NAME"]
+        .dropna()
+        .unique()
+    )
+except Exception as e:
+    st.error(f"❌ เกิดข้อผิดพลาดในการโหลดข้อมูลสวน: {e}")
+    st.stop()
 
 # ============================================================
 # KPI SUMMARY
@@ -316,9 +339,7 @@ st.markdown("""
 # ============================================================
 
 def ask_ai(prompt):
-
     response = model.generate_content(prompt)
-
     return response.text
 
 # ============================================================
@@ -335,7 +356,6 @@ tab1, tab2 = st.tabs([
 # ============================================================
 
 with tab1:
-
     left_col, right_col = st.columns([1.05, 1])
 
     with left_col:
@@ -402,30 +422,26 @@ with tab1:
         """, unsafe_allow_html=True)
 
     if generate_plan:
-
-        park_row = df_parks[
-            df_parks["PARK_NAME"] == selected_park
-        ].iloc[0]
-
-        area = park_row["AREA"]
-
-        run_m = park_row["RUN_M"]
-        run_m_num = pd.to_numeric(run_m, errors="coerce")
-
-        if pd.isna(run_m_num):
-            park_type = "ไม่มีข้อมูลลู่วิ่ง"
-
-        elif run_m_num < 1000:
-            park_type = "สวนขนาดเล็ก"
-
-        elif run_m_num < 2000:
-            park_type = "สวนขนาดกลาง"
-
+        filtered_df = df_parks[df_parks["PARK_NAME"] == selected_park]
+        
+        if filtered_df.empty:
+            st.error("❌ ไม่พบข้อมูลของสวนสาธารณะที่เลือกในระบบ")
         else:
-            park_type = "สวนขนาดใหญ่"
+            park_row = filtered_df.iloc[0]
+            area = park_row["AREA"]
+            run_m = park_row["RUN_M"]
+            run_m_num = pd.to_numeric(run_m, errors="coerce")
 
-        prompt = f"""
+            if pd.isna(run_m_num):
+                park_type = "ไม่มีข้อมูลลู่วิ่ง"
+            elif run_m_num < 1000:
+                park_type = "สวนขนาดเล็ก"
+            elif run_m_num < 2000:
+                park_type = "สวนขนาดกลาง"
+            else:
+                park_type = "สวนขนาดใหญ่"
 
+            prompt = f"""
 คุณคือ Personal Trainer และ Running Coach
 
 ข้อมูลผู้ใช้งาน
@@ -452,76 +468,58 @@ with tab1:
 {workout_time} นาที
 
 กติกาในการออกแบบโปรแกรม
-
 - หากเป็นสวนขนาดใหญ่ ให้เน้น Running Program
-
 - หากเป็นสวนขนาดกลาง ให้ผสม Running และ Bodyweight
-
 - หากเป็นสวนขนาดเล็ก ให้เน้น Circuit Training และ Bodyweight
-
 - หากไม่มีข้อมูลลู่วิ่ง ให้หลีกเลี่ยงการออกแบบโปรแกรมที่ต้องวิ่งระยะไกล และเน้นการออกกำลังกายที่ใช้พื้นที่จำกัด
 
 โปรดสร้างโปรแกรมออกกำลังกายให้เหมาะสมกับ
-
 - เป้าหมาย
 - ระดับความฟิต
 - เวลาที่มี
 - ลักษณะของสวน
 
 จัดรูปแบบคำตอบเป็น
-
 🏃 เหตุผลที่เลือกโปรแกรมนี้
-
 🔥 Warm-up
-
 💪 Main Workout
-
 🧘 Cool Down
-
 ⏱ เวลาที่ใช้ในแต่ละช่วง
-
 💡 คำแนะนำเพิ่มเติม
 
 ตอบเป็นภาษาไทย
 """
 
-        with st.spinner("🤖 AI กำลังออกแบบโปรแกรม..."):
+            with st.spinner("🤖 AI กำลังออกแบบโปรแกรม..."):
+                try:
+                    result = ask_ai(prompt)
 
-            try:
+                    st.markdown("""
+                    <div class="ai-answer-box">
+                        <div class="small-title">✨ โปรแกรมที่ AI แนะนำ</div>
+                    """, unsafe_allow_html=True)
 
-                result = ask_ai(prompt)
+                    st.markdown(result)
+                    st.markdown("</div>", unsafe_allow_html=True)
 
-                st.markdown("""
-                <div class="ai-answer-box">
-                    <div class="small-title">✨ โปรแกรมที่ AI แนะนำ</div>
-                """, unsafe_allow_html=True)
-
-                st.markdown(result)
-
-                st.markdown("</div>", unsafe_allow_html=True)
-
-                st.markdown(
-                    """
-                    <div class="disclaimer-box">
-                    ⚠️ <b>Disclaimer:</b>
-                    คำแนะนำนี้สร้างขึ้นโดยระบบ AI เพื่อใช้เป็นข้อมูลเบื้องต้นเท่านั้น
-                    ไม่ใช่คำแนะนำทางการแพทย์หรือคำแนะนำจากผู้เชี่ยวชาญด้านสุขภาพ
-                    โปรดใช้วิจารณญาณและพิจารณาสภาพร่างกายของตนเองก่อนออกกำลังกาย
-                    </div>
-                    """,
-                    unsafe_allow_html=True
-                )
-
-            except Exception as e:
-
-                st.error(f"เกิดข้อผิดพลาด: {e}")
+                    st.markdown("""
+                        <div class="disclaimer-box">
+                        ⚠️ <b>Disclaimer:</b>
+                        คำแนะนำนี้สร้างขึ้นโดยระบบ AI เพื่อใช้เป็นข้อมูลเบื้องต้นเท่านั้น
+                        ไม่ใช่คำแนะนำทางการแพทย์หรือคำแนะนำจากผู้เชี่ยวชาญด้านสุขภาพ
+                        โปรดใช้วิจารณญาณและพิจารณาสภาพร่างกายของตนเองก่อนออกกำลังกาย
+                        </div>
+                        """,
+                        unsafe_allow_html=True
+                    )
+                except Exception as e:
+                    st.error(f"เกิดข้อผิดพลาดในการเรียก AI: {e}")
 
 # ============================================================
 # TAB 2
 # ============================================================
 
 with tab2:
-
     faq_col, ask_col = st.columns([1, 1])
 
     with faq_col:
@@ -579,16 +577,13 @@ with tab2:
         st.markdown("</div>", unsafe_allow_html=True)
 
     if faq_button:
-
         prompt = f"""
 คุณคือ AI Urban Wellness Assistant
 
 ตอบคำถามต่อไปนี้
-
 {selected_faq}
 
 ตอบเป็นภาษาไทย
-
 - เข้าใจง่าย
 - ใช้ภาษาทั่วไป
 - ไม่เกิน 300 คำ
@@ -596,9 +591,7 @@ with tab2:
 """
 
         with st.spinner("กำลังค้นหาคำตอบ..."):
-
             try:
-
                 result = ask_ai(prompt)
 
                 st.markdown("""
@@ -607,24 +600,18 @@ with tab2:
                 """, unsafe_allow_html=True)
 
                 st.markdown(result)
-
                 st.markdown("</div>", unsafe_allow_html=True)
-
             except Exception as e:
-
                 st.error(f"เกิดข้อผิดพลาด: {e}")
 
     if ask_button:
-
         if user_question.strip() == "":
             st.warning("กรุณากรอกคำถามก่อน")
         else:
-
             prompt = f"""
 คุณคือ AI Urban Wellness Assistant
 
 คุณตอบได้เฉพาะเรื่อง
-
 - สุขภาพ
 - การออกกำลังกาย
 - การวิ่ง
@@ -632,19 +619,14 @@ with tab2:
 - การใช้สวนสาธารณะเพื่อกิจกรรมทางกาย
 
 คำถาม:
-
 {user_question}
 
 ตอบเป็นภาษาไทย
-
-หากเป็นคำถามทางการแพทย์เฉพาะทาง
-ให้แนะนำให้ปรึกษาแพทย์หรือผู้เชี่ยวชาญเพิ่มเติม
+หากเป็นคำถามทางการแพทย์เฉพาะทาง ให้แนะนำให้ปรึกษาแพทย์หรือผู้เชี่ยวชาญเพิ่มเติม
 """
 
             with st.spinner("AI กำลังคิดคำตอบ..."):
-
                 try:
-
                     result = ask_ai(prompt)
 
                     st.markdown("""
@@ -653,19 +635,4 @@ with tab2:
                     """, unsafe_allow_html=True)
 
                     st.markdown(result)
-
-                    st.markdown("</div>", unsafe_allow_html=True)
-
-                except Exception as e:
-
-                    st.error(f"เกิดข้อผิดพลาด: {e}")
-
-# ============================================================
-# FOOTER
-# ============================================================
-
-st.divider()
-
-st.caption(
-    "DADS5001 | Data Analytics and Data Science Tools and Programming"
-)
+                    st.markdown
