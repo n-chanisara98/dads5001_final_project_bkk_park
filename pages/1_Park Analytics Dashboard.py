@@ -344,6 +344,7 @@ if not df_chart_data.empty:
     max_area_name = df_chart_data.loc[df_chart_data["Chart_Area"].idxmax()][y_axis_col]
     max_visit_name = df_chart_data.loc[df_chart_data["Chart_Visitors"].idxmax()][y_axis_col]
     max_ratio_name = df_chart_data.loc[df_chart_data["Chart_Ratio"].idxmax()][y_axis_col]
+    
     st.markdown(f'''
     <div class="insight-box">
         💡 <b>Insight สำคัญ:</b>
