@@ -346,7 +346,7 @@ if not df_chart_data.empty:
     max_ratio_name = df_chart_data.loc[df_chart_data["Chart_Ratio"].idxmax()][y_axis_col]
     
     st.markdown(f'''
-    <div class="insight-box">
+    <div class="insight-box" style="clear: both; margin-top: 30px;">
         💡 <b>Insight สำคัญ:</b>
         พื้นที่ใหญ่ที่สุดคือ <b>{max_area_name}</b> · ผู้ใช้งานจริงต่อเดือนสูงสุดคือ <b>{max_visit_name}</b> ·
         พื้นที่ที่มีภาระต่อประชากรสูงสุดคือ <b>{max_ratio_name}</b>
