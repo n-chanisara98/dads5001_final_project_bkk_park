@@ -184,25 +184,21 @@ def init_connections():
         database=st.secrets["connections"]["snowflake"]["database"],
         schema=st.secrets["connections"]["snowflake"]["schema"],
         role=st.secrets["connections"]["snowflake"]["role"],
-        client_session_keep_alive=True  # สั่งเปิดท่อ connect ค้างไว้ไม่ให้หมดอายุ
+        client_session_keep_alive=True  
     )
 
-    # 🛡️ ชุบชีวิต Wrapper ตัวดั้งเดิมของพวกคุณ ให้ฉลาดดักจับสายหลุดได้เองอัตโนมัติ
     class SnowflakeWrapper:
         def __init__(self, connection):
             self.conn = connection
 
         def query(self, sql):
             try:
-                # ถ้าสายปิด หรือหมดอายุ ให้แอบล้างแคชเก่าแล้วเปิดสายใหม่ทันที
                 if self.conn.is_closed():
                     st.cache_resource.clear()
-                    # สั่งสร้างการเชื่อมต่อขึ้นมาใหม่แบบไร้รอยต่อ
                     mongo_client_new, sf_wrapper_new = init_connections()
                     self.conn = sf_wrapper_new.conn
                 return pd.read_sql(sql, self.conn)
             except Exception:
-                # แผนสำรองสุดท้าย: บังคับเปิดท่อใหม่ดื้อๆ ป้องกันหน้าแดง
                 st.cache_resource.clear()
                 ctx_fallback = snowflake.connector.connect(
                     user=st.secrets["connections"]["snowflake"]["user"],
@@ -225,7 +221,7 @@ mongo_db = mongo_client["dads5001"]
 mongo_col = mongo_db["pm25"]
 
 # =====================================================================
-# 2. DATA FETCHING
+# 2. DATA FETCHING (ดึงข้อมูลฝุ่น + สแตมป์เวลาเพิ่มเข้ามา)
 # =====================================================================
 def refresh_and_get_pm25():
     api_url = "http://air4thai.pcd.go.th/services/getNewAQI_JSON.php?region=1"
@@ -249,12 +245,18 @@ def refresh_and_get_pm25():
                 aqi_last = station.get("AQILast", {})
                 pm25_dict = aqi_last.get("PM25", {}) if isinstance(aqi_last, dict) else {}
                 pm25_val = pm25_dict.get("value") if isinstance(pm25_dict, dict) else None
+                
+                # [จุดปรับเพิ่มที่ 1] ดึงค่า วันที่ และ เวลา ตรวจวัดล่าสุดของแต่ละสถานี
+                meas_date = aqi_last.get("date", "ไม่ระบุ")
+                meas_time = aqi_last.get("time", "ไม่ระบุ")
+                time_stamp_str = f"{meas_date} {meas_time}"
 
                 stations_list.append({
                     "station_name": station.get("nameTH"),
                     "station_lat": float(station.get("lat")),
                     "station_lon": float(station.get("long")),
-                    "pm25": float(pm25_val) if pm25_val is not None and str(pm25_val).strip() != "-1" else np.nan
+                    "pm25": float(pm25_val) if pm25_val is not None and str(pm25_val).strip() != "-1" else np.nan,
+                    "updated_time": time_stamp_str # นำไปเก็บบันทึกใน DataFrame ลิสต์สถานี
                 })
 
             except (ValueError, TypeError, AttributeError):
@@ -286,6 +288,12 @@ def load_snowflake_data():
 
 df_stations_pm25 = refresh_and_get_pm25()
 df_p, df_ll, df_d, df_trains = load_snowflake_data()
+
+# [จุดปรับเพิ่มที่ 2] สกัดเอาเวลาอัปเดตภาพรวม เพื่อไปโชว์ในกล่อง KPI ด้านบน
+global_update_time = "N/A"
+if not df_stations_pm25.empty:
+    # ดึงค่าเวลาอัปเดตจากแถวแรกที่ได้มาแสดงผล
+    global_update_time = df_stations_pm25["updated_time"].iloc[0]
 
 # =====================================================================
 # 3. DUCKDB MERGING
@@ -341,9 +349,12 @@ if not df_stations_pm25.empty and not df_parks_merged.empty:
 
     df_parks_merged["NEAREST_AIR_STATION"] = df_stations_pm25["station_name"].iloc[closest_air_indices].values
     df_parks_merged["LATEST_PM25"] = df_stations_pm25["pm25"].iloc[closest_air_indices].values
+    # แมปคอลัมน์สแตมป์เวลาของสถานีฝุ่นเข้าหากับสวนสาธารณะนั้น ๆ
+    df_parks_merged["AIR_UPDATED_TIME"] = df_stations_pm25["updated_time"].iloc[closest_air_indices].values
 else:
     df_parks_merged["NEAREST_AIR_STATION"] = "ไม่มีข้อมูลสถานี"
     df_parks_merged["LATEST_PM25"] = np.nan
+    df_parks_merged["AIR_UPDATED_TIME"] = "N/A"
 
 
 min_train_distances = []
@@ -448,7 +459,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # =====================================================================
-# 8. KPI SUMMARY
+# 8. KPI SUMMARY (จุดปรับเพิ่มที่ 3: แปะเวลาสแตมป์ภาพรวมที่กล่องค่าฝุ่นเฉลี่ย)
 # =====================================================================
 total_found = len(df_filtered)
 avg_pm25 = df_filtered["LATEST_PM25"].mean() if not df_filtered.empty else np.nan
@@ -470,9 +481,9 @@ with kpi2:
     pm25_text = f"{avg_pm25:.1f}" if not pd.isna(avg_pm25) else "N/A"
     st.markdown(f"""
     <div class="kpi-card" style="border-top:8px solid #E22028;">
-        <div class="kpi-label">😷 PM2.5 เฉลี่ย</div>
+        <div class="kpi-label">😷 PM2.5 เฉลี่ยล่าสุด</div>
         <div class="kpi-value">{pm25_text}</div>
-        <div class="kpi-chip">µg/m³ ล่าสุด</div>
+        <div class="kpi-chip">⏱️ อัปเดต: {global_update_time}</div>
     </div>
     """, unsafe_allow_html=True)
 
@@ -552,6 +563,7 @@ with col_map:
             hover_name="NAME",
             hover_data={
                 "LATEST_PM25": ":.1f",
+                "AIR_UPDATED_TIME": True,  # ใส่เวลาลงในกล่อง Hover บนแผนที่ Plotly
                 "NEAREST_AIR_STATION": True,
                 "NEAREST_TRAIN_STATION": True,
                 "DIST_TO_TRAIN_M": ":,.0f",
@@ -571,6 +583,11 @@ with col_map:
             size_max=18,
             zoom=10.8,
             height=690
+        )
+
+        # เปลี่ยนชื่อหัวข้อแสดงใน Hover box ให้สวยงามขึ้น
+        fig.update_traces(
+            hovertemplate="<b>%{hovertext}</b><br><br>PM2.5 ล่าสุด: %{customdata[0]:.1f}<br>เวลาอัปเดต: %{customdata[1]}<br>สถานีวัดฝุ่นใกล้สุด: %{customdata[2]}<br>สถานีรถไฟฟ้าใกล้สุด: %{customdata[3]}<br>ระยะถึงรถไฟฟ้า (เมตร): %{customdata[4]:,.0f}<br>ระยะลู่วิ่ง (เมตร): %{customdata[5]:,.0f}<br>ห้องน้ำ: %{customdata[6]}<br>ลานกีฬา: %{customdata[7]}<br>ลู่วิ่ง: %{customdata[8]}<br>ที่จอดรถ: %{customdata[9]}<br>ทางจักรยาน: %{customdata[10]}<br>สัตว์เลี้ยงเข้าได้: %{customdata[11]}"
         )
 
         fig.update_layout(
@@ -607,10 +624,14 @@ with col_list:
         for _, park in df_filtered.iterrows():
             pm25_display = f"{park['LATEST_PM25']:.1f} µg/m³" if not pd.isna(park["LATEST_PM25"]) else "N/A"
             train_m = park["DIST_TO_TRAIN_KM"] * 1000
+            
+            # ดึงเวลาเจาะจงเฉพาะสถานีนั้น ๆ ขึ้นมามัดรวมไว้
+            time_display = park["AIR_UPDATED_TIME"]
 
             with st.expander(f"🌳 {park['NAME']}"):
                 st.markdown(f"**⏰ เวลาเปิด-ปิด:** {park['OPEN']} - {park['CLOSE']}")
-                st.markdown(f"**😷 PM2.5 ล่าสุด:** {pm25_display}")
+                # [จุดปรับเพิ่มที่ 4] แสดงเวลาอัปเดตต่อท้ายค่าฝุ่นฝั่งขวา
+                st.markdown(f"**😷 PM2.5 ล่าสุด:** {pm25_display} *(ข้อมูล ณ {time_display})*")
                 st.markdown(f"**🏢 สถานีวัดฝุ่นใกล้สุด:** {park['NEAREST_AIR_STATION']}")
                 st.markdown(f"**🚇 สถานีรถไฟฟ้าใกล้สุด:** {park['NEAREST_TRAIN_STATION']} ({train_m:.0f} เมตร)")
 
@@ -648,7 +669,7 @@ with col_list:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # =====================================================================
-# 11. DETAIL TABLE
+# 11. DETAIL TABLE (จุดปรับเพิ่มที่ 5: นำคอลัมน์เวลาลงตารางด้านล่างให้สมบูรณ์)
 # =====================================================================
 st.markdown('<div class="section-title">📑 ตารางข้อมูลสวนที่ผ่านตัวกรอง</div>', unsafe_allow_html=True)
 
@@ -661,6 +682,7 @@ if not df_filtered.empty:
         "DIST_TO_TRAIN_KM",
         "NEAREST_AIR_STATION",
         "LATEST_PM25",
+        "AIR_UPDATED_TIME", # ดึงคอลัมน์สแตมป์เวลามาใส่ตาราง
         "RUN_M"
     ]].copy()
 
@@ -674,6 +696,7 @@ if not df_filtered.empty:
         "DIST_TO_TRAIN_M",
         "NEAREST_AIR_STATION",
         "LATEST_PM25",
+        "AIR_UPDATED_TIME",
         "RUN_M"
     ]]
 
@@ -685,6 +708,7 @@ if not df_filtered.empty:
         "ระยะถึงรถไฟฟ้า (เมตร)",
         "สถานีวัดฝุ่นใกล้สุด",
         "PM2.5 ล่าสุด",
+        "เวลาที่อัปเดตข้อมูล", # หัวตารางใหม่
         "ระยะลู่วิ่ง (เมตร)"
     ]
 
