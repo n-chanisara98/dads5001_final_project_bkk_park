@@ -300,7 +300,6 @@ st.markdown(f"""
     <div class="hero-title">Park Analytics Dashboard</div>
     <div class="hero-subtitle">
         วิเคราะห์พื้นที่สีเขียว พฤติกรรมผู้ใช้งาน และความพร้อมของสิ่งอำนวยความสะดวก
-        เพื่อมองเห็นภาพรวมสวนสาธารณะกรุงเทพฯ แบบเข้าใจง่ายในหน้าเดียว
     </div>
     <div class="hero-pills">
         <span class="hero-pill">📍 Scope: {current_scope}</span>
