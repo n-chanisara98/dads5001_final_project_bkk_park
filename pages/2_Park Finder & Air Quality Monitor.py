@@ -183,15 +183,39 @@ def init_connections():
         warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
         database=st.secrets["connections"]["snowflake"]["database"],
         schema=st.secrets["connections"]["snowflake"]["schema"],
-        role=st.secrets["connections"]["snowflake"]["role"]
+        role=st.secrets["connections"]["snowflake"]["role"],
+        client_session_keep_alive=True  # สั่งเปิดท่อ connect ค้างไว้ไม่ให้หมดอายุ
     )
 
+    # 🛡️ ชุบชีวิต Wrapper ตัวดั้งเดิมของพวกคุณ ให้ฉลาดดักจับสายหลุดได้เองอัตโนมัติ
     class SnowflakeWrapper:
         def __init__(self, connection):
             self.conn = connection
 
         def query(self, sql):
-            return pd.read_sql(sql, self.conn)
+            try:
+                # ถ้าสายปิด หรือหมดอายุ ให้แอบล้างแคชเก่าแล้วเปิดสายใหม่ทันที
+                if self.conn.is_closed():
+                    st.cache_resource.clear()
+                    # สั่งสร้างการเชื่อมต่อขึ้นมาใหม่แบบไร้รอยต่อ
+                    mongo_client_new, sf_wrapper_new = init_connections()
+                    self.conn = sf_wrapper_new.conn
+                return pd.read_sql(sql, self.conn)
+            except Exception:
+                # แผนสำรองสุดท้าย: บังคับเปิดท่อใหม่ดื้อๆ ป้องกันหน้าแดง
+                st.cache_resource.clear()
+                ctx_fallback = snowflake.connector.connect(
+                    user=st.secrets["connections"]["snowflake"]["user"],
+                    password=st.secrets["connections"]["snowflake"]["password"],
+                    account=st.secrets["connections"]["snowflake"]["account"],
+                    warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
+                    database=st.secrets["connections"]["snowflake"]["database"],
+                    schema=st.secrets["connections"]["snowflake"]["schema"],
+                    role=st.secrets["connections"]["snowflake"]["role"],
+                    client_session_keep_alive=True
+                )
+                self.conn = ctx_fallback
+                return pd.read_sql(sql, self.conn)
 
     return mongo_client, SnowflakeWrapper(ctx)
 
