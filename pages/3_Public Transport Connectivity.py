@@ -157,15 +157,36 @@ def init_snowflake_connection():
         warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
         database=st.secrets["connections"]["snowflake"]["database"],
         schema=st.secrets["connections"]["snowflake"]["schema"],
-        role=st.secrets["connections"]["snowflake"]["role"]
+        role=st.secrets["connections"]["snowflake"]["role"],
+        client_session_keep_alive=True  # เปิดท่อทิ้งไว้ป้องกันสายหลุด
     )
 
+    # 🛡️ ระบบตรวจจับและชุบชีวิตการเชื่อมต่ออัตโนมัติเมื่อ Session ขาดหาย
     class SnowflakeWrapper:
         def __init__(self, connection):
             self.conn = connection
 
         def query(self, sql):
-            return pd.read_sql(sql, self.conn)
+            try:
+                if self.conn.is_closed():
+                    st.cache_resource.clear()
+                    sf_wrapper_new = init_snowflake_connection()
+                    self.conn = sf_wrapper_new.conn
+                return pd.read_sql(sql, self.conn)
+            except Exception:
+                st.cache_resource.clear()
+                ctx_fallback = snowflake.connector.connect(
+                    user=st.secrets["connections"]["snowflake"]["user"],
+                    password=st.secrets["connections"]["snowflake"]["password"],
+                    account=st.secrets["connections"]["snowflake"]["account"],
+                    warehouse=st.secrets["connections"]["snowflake"]["warehouse"],
+                    database=st.secrets["connections"]["snowflake"]["database"],
+                    schema=st.secrets["connections"]["snowflake"]["schema"],
+                    role=st.secrets["connections"]["snowflake"]["role"],
+                    client_session_keep_alive=True
+                )
+                self.conn = ctx_fallback
+                return pd.read_sql(sql, self.conn)
 
     return SnowflakeWrapper(ctx)
 
