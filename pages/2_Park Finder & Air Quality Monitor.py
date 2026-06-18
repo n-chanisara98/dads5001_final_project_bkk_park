@@ -618,6 +618,8 @@ with col_list:
             train_m = park["DIST_TO_TRAIN_KM"] * 1000
 
             with st.expander(f"🌳 {park['NAME']}"):
+
+                air_time = park.get('AIR_UPDATED_TIME', 'ไม่ระบุ')
                 st.markdown(f"**⏰ เวลาเปิด-ปิด:** {park['OPEN']} - {park['CLOSE']}")
                 st.markdown(f"**😷 PM2.5 ล่าสุด:** {pm25_display} ({air_time})")
                 st.markdown(f"**🏢 สถานีวัดฝุ่นใกล้สุด:** {park['NEAREST_AIR_STATION']}")
