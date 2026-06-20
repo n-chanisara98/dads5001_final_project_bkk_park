@@ -142,6 +142,36 @@ st.markdown("""
         font-size: 20px;
         font-weight: 750;
     }
+
+    /* ===== Plotly Chart Dark Mode Readability Fix ===== */
+    .chart-card {
+        background: rgba(255,255,255,0.96) !important;
+        color: #17342A !important;
+    }
+
+    .chart-card *,
+    .js-plotly-plot,
+    .js-plotly-plot * {
+        color: #17342A !important;
+    }
+
+    .chart-title,
+    .chart-desc,
+    .section-title {
+        color: #00492C !important;
+    }
+
+    .modebar,
+    .modebar * {
+        color: #00492C !important;
+    }
+
+    .hoverlayer .hovertext,
+    .hoverlayer .hovertext * {
+        fill: #FFFFFF !important;
+        color: #FFFFFF !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -409,31 +439,62 @@ try:
             size_max=32
         )
 
+        fig_scatter.update_traces(
+            marker=dict(
+                opacity=0.88,
+                line=dict(width=1.5, color="rgba(0,73,44,0.45)")
+            )
+        )
+
         fig_scatter.update_layout(
-            height=520,
-            margin=dict(l=60, r=40, t=20, b=60),
-            plot_bgcolor="rgba(255,255,255,0)",
-            paper_bgcolor="rgba(255,255,255,0)",
-            font=dict(size=13, color="#51635A"),
+            height=540,
+            margin=dict(l=90, r=120, t=25, b=75),
+            plot_bgcolor="rgba(255,255,255,0.98)",
+            paper_bgcolor="rgba(255,255,255,0.96)",
+            font=dict(
+                family="Inter, Noto Sans Thai, sans-serif",
+                size=13,
+                color="#17342A"
+            ),
             legend=dict(
+                title=dict(
+                    text="ความหนาแน่นผู้ใช้งาน",
+                    font=dict(color="#17342A", size=13)
+                ),
+                font=dict(color="#17342A", size=13),
+                bgcolor="rgba(255,255,255,0.90)",
+                bordercolor="rgba(0,73,44,0.18)",
+                borderwidth=1,
                 orientation="v",
                 yanchor="top",
                 y=1,
                 xanchor="left",
                 x=1.02
+            ),
+            hoverlabel=dict(
+                bgcolor="#17342A",
+                font_size=13,
+                font_color="#FFFFFF",
+                bordercolor="#00492C"
             )
         )
 
         fig_scatter.update_xaxes(
             showgrid=True,
-            gridcolor="rgba(0,73,44,0.10)",
-            zeroline=False
+            gridcolor="rgba(0,73,44,0.14)",
+            zeroline=False,
+            tickfont=dict(color="#17342A", size=13),
+            title_font=dict(color="#17342A", size=14),
+            linecolor="rgba(0,73,44,0.25)"
         )
 
         fig_scatter.update_yaxes(
             showgrid=True,
-            gridcolor="rgba(0,73,44,0.10)",
-            zeroline=False
+            gridcolor="rgba(0,73,44,0.14)",
+            zeroline=False,
+            tickfont=dict(color="#17342A", size=13),
+            title_font=dict(color="#17342A", size=14),
+            linecolor="rgba(0,73,44,0.25)"
         )
 
         st.plotly_chart(fig_scatter, use_container_width=True)
@@ -467,20 +528,37 @@ try:
         fig_pie.update_traces(
             textposition="inside",
             textinfo="percent+value",
+            textfont=dict(color="#17342A", size=14),
+            marker=dict(line=dict(color="#FFF8E7", width=4)),
             pull=[0.04, 0.02, 0.02]
         )
 
         fig_pie.update_layout(
-            height=520,
-            margin=dict(l=20, r=20, t=20, b=30),
-            paper_bgcolor="rgba(255,255,255,0)",
-            font=dict(size=13, color="#51635A"),
+            height=540,
+            margin=dict(l=20, r=20, t=25, b=70),
+            paper_bgcolor="rgba(255,255,255,0.96)",
+            plot_bgcolor="rgba(255,255,255,0.98)",
+            font=dict(
+                family="Inter, Noto Sans Thai, sans-serif",
+                size=13,
+                color="#17342A"
+            ),
             legend=dict(
                 orientation="h",
                 yanchor="bottom",
-                y=-0.08,
+                y=-0.12,
                 xanchor="center",
-                x=0.5
+                x=0.5,
+                font=dict(color="#17342A", size=13),
+                bgcolor="rgba(255,255,255,0.90)",
+                bordercolor="rgba(0,73,44,0.16)",
+                borderwidth=1
+            ),
+            hoverlabel=dict(
+                bgcolor="#17342A",
+                font_size=13,
+                font_color="#FFFFFF",
+                bordercolor="#00492C"
             )
         )
 
