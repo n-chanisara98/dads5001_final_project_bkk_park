@@ -200,6 +200,42 @@ st.markdown("""
         color: #51635A !important;
     }
 
+
+    /* ===== Right Panel Dark Mode Text Fix ===== */
+    .list-card,
+    .list-card *,
+    .map-card,
+    .map-card *,
+    div[data-testid="stExpander"],
+    div[data-testid="stExpander"] *,
+    div[data-testid="stExpander"] summary,
+    div[data-testid="stExpander"] summary *,
+    div[data-testid="stExpander"] p,
+    div[data-testid="stExpander"] span,
+    div[data-testid="stExpander"] div,
+    div[data-testid="stExpander"] label {
+        color: #00492C !important;
+    }
+
+    .list-card .desc-text,
+    .map-card .desc-text,
+    div[data-testid="stExpander"] small,
+    .stCaptionContainer,
+    .stCaptionContainer * {
+        color: #51635A !important;
+    }
+
+    div[data-testid="stExpander"] {
+        background: #FFFFFF !important;
+        border: 1px solid rgba(0,73,44,0.18) !important;
+        box-shadow: 0 8px 18px rgba(0,73,44,0.08) !important;
+    }
+
+    div[data-testid="stExpander"] svg {
+        fill: #00492C !important;
+        color: #00492C !important;
+    }
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -588,7 +624,7 @@ with col_map:
         df_map_show["DIST_TO_TRAIN_M"] = df_map_show["DIST_TO_TRAIN_KM"] * 1000
 
         # เพิ่มขนาดจุดสวนให้ใหญ่และเด่น มองเห็นง่ายบนแผนที่
-        df_map_show["MARKER_SIZE"] = 30
+        df_map_show["MARKER_SIZE"] = 16
         df_map_show = df_map_show.sort_values("LATEST_PM25", ascending=True)
 
         fig = px.scatter_mapbox(
@@ -616,22 +652,25 @@ with col_map:
             color="LATEST_PM25",
             color_continuous_scale=["#7ED957", "#FBBA16", "#F05A28", "#E22028"],
             size="MARKER_SIZE",
-            size_max=42,
+            size_max=24,
             zoom=10.8,
-            height=720
+            height=700
         )
 
         fig.update_layout(
-            mapbox_style="carto-positron",
+            mapbox_style="open-street-map",
             margin=dict(r=0, t=0, l=0, b=0),
             paper_bgcolor="rgba(255,255,255,0)",
             plot_bgcolor="rgba(255,255,255,0)",
             coloraxis_colorbar=dict(
-                title="PM2.5",
-                thickness=14,
-                len=0.75,
+                title=dict(text="PM2.5", font=dict(color="#00492C", size=13)),
+                tickfont=dict(color="#00492C", size=12),
+                thickness=16,
+                len=0.72,
                 y=0.5,
-                bgcolor="rgba(255,255,255,0.65)"
+                bgcolor="rgba(255,255,255,0.92)",
+                outlinecolor="rgba(0,73,44,0.20)",
+                outlinewidth=1
             )
         )
 
