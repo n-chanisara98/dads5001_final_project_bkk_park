@@ -6,7 +6,7 @@ def render_about_this_project():
     # ============================================================
     st.markdown("""
     <style>
-    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;600;700;800;900&display=swap');
 
     html, body, [class*="css"] { font-family: 'Inter', 'Noto Sans Thai', sans-serif; }
     .stApp {
@@ -60,7 +60,14 @@ def render_about_this_project():
         padding: 35px;
         box-shadow: 0 20px 58px rgba(0,73,44,0.08);
         margin-top: 10px;
+        animation: fadeIn 0.4s ease-in-out;
     }
+    
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(8px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    
     .card-topic { color:#00492C; font-size: 24px; font-weight: 950; margin-bottom: 20px; border-bottom: 2px solid rgba(0,73,44,.1); padding-bottom: 12px; }
     
     .method-item { margin-bottom: 20px; }
@@ -83,6 +90,18 @@ def render_about_this_project():
         margin-right: 8px;
         border: 1px solid rgba(0,73,44,.2);
     }
+    
+    .pres-guide {
+        background: rgba(0, 73, 44, 0.05);
+        padding: 12px 20px;
+        border-radius: 14px;
+        color: #00492C;
+        font-weight: 700;
+        font-size: 14px;
+        margin-bottom: 15px;
+        display: inline-block;
+    }
+    
     hr { margin: 2rem 0; border: none; height: 1px; background: rgba(0,73,44,0.1); }
     </style>
     """, unsafe_allow_html=True)
@@ -106,12 +125,25 @@ def render_about_this_project():
 
     # 4. SOLUTION (METHODOLOGY) - Interactive Slide
     st.markdown('<div class="section-title">Solution (Methodology)</div>', unsafe_allow_html=True)
+    st.markdown('<div class="pres-guide">💡 คลิกเลือกหัวข้อด้านล่างเพื่อแสดงสไลด์เจาะลึกทีละข้อระหว่างพรีเซนต์:</div>', unsafe_allow_html=True)
     
-    # ตัวเลือกสลับสไลด์
-    choice = st.radio("เลือกขั้นตอนที่ต้องการนำเสนอ:", ["1. Database Architecture", "2. Processing & DuckDB", "3. AI Integration"], horizontal=True, label_visibility="collapsed")
+    # แท็บปุ่มกดแบบ Segmented Control สวยๆ เหมือนเวอร์ชันก่อนหน้า
+    step_options = [
+        "🗄️ 1) Database Architecture", 
+        "⚡ 2) Processing & DuckDB Engine", 
+        "🤖 3) AI Integration"
+    ]
+    current_step = st.segmented_control(
+        "Select Methodology Step", 
+        options=step_options, 
+        default=step_options[0],
+        label_visibility="collapsed"
+    )
+
+    st.write("") # เว้นระยะช่องไฟ
 
     # --- หัวข้อที่ 1 ---
-    if choice == "1. Database Architecture":
+    if current_step == "🗄️ 1) Database Architecture":
         st.markdown("""
 <div class="solution-card">
     <div class="card-topic">🗄️ 1) Database Architecture (Hybrid Strategy)</div>
@@ -129,7 +161,7 @@ def render_about_this_project():
         """, unsafe_allow_html=True)
 
     # --- หัวข้อที่ 2 ---
-    elif choice == "2. Processing & DuckDB":
+    elif current_step == "⚡ 2) Processing & DuckDB Engine":
         st.markdown("""
 <div class="solution-card">
     <div class="card-topic">⚡ 2) Processing & DuckDB Engine</div>
@@ -155,7 +187,7 @@ def render_about_this_project():
     <div class="card-topic">🤖 3) AI Integration (Urban Wellness)</div>
     <div class="method-item">
         <span class="step-tag">🧠 Gemini Brain</span>
-        <div class="method-desc"><b>Core Engine:</b> ใช้ Gemini 2.5 Flash API ผ่านไลบรารี Google เพื่อความเร็วและความแม่นยำในการวิเคราะห์ข้อมูลสุขภาพ</div>
+        <div class="method-desc"><b>Core Engine:</b> ใช้ Gemini 2.5 Flash API ผ่าน Google AI Studio เพื่อความเร็วและความแม่นยำในการวิเคราะห์ข้อมูลสุขภาพ</div>
     </div>
     <div class="method-item">
         <span class="step-tag">⛓️ Context-Aware</span>
