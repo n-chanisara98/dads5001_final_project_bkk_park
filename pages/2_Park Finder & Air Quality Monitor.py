@@ -28,12 +28,20 @@ st.markdown("""
     }
 
     section[data-testid="stSidebar"] * {
-        color: white !important;
+        color: #FFFFFF !important;
     }
 
     section[data-testid="stSidebar"] .stMultiSelect div,
-    section[data-testid="stSidebar"] .stSelectbox div {
+    section[data-testid="stSidebar"] .stSelectbox div,
+    section[data-testid="stSidebar"] input {
         color: #00492C !important;
+    }
+
+    section[data-testid="stSidebar"] label,
+    section[data-testid="stSidebar"] p,
+    section[data-testid="stSidebar"] span {
+        color: #FFFFFF !important;
+        font-weight: 750 !important;
     }
 
     .hero-box {
@@ -54,19 +62,21 @@ st.markdown("""
         font-weight: 900;
         line-height: 1.15;
         margin-bottom: 10px;
+        color: #FFFFFF !important;
     }
 
     .hero-subtitle {
         font-size: 19px;
-        font-weight: 600;
-        opacity: 0.95;
+        font-weight: 650;
+        color: #FFFFFF !important;
+        opacity: 0.98;
         max-width: 980px;
     }
 
     .hero-tag {
         display: inline-block;
         background: #FBBA16;
-        color: #00492C;
+        color: #00492C !important;
         padding: 9px 16px;
         border-radius: 999px;
         font-weight: 900;
@@ -75,24 +85,24 @@ st.markdown("""
     }
 
     .kpi-card {
-        background: rgba(255,255,255,0.90);
+        background: rgba(255,255,255,0.96);
         padding: 24px 26px;
         border-radius: 26px;
         box-shadow: 0 12px 30px rgba(0,73,44,0.10);
-        border: 1px solid rgba(0,73,44,0.10);
+        border: 1px solid rgba(0,73,44,0.12);
         min-height: 145px;
     }
 
     .kpi-label {
         font-size: 14px;
-        color: #51635A;
-        font-weight: 750;
+        color: #51635A !important;
+        font-weight: 800;
         margin-bottom: 10px;
     }
 
     .kpi-value {
         font-size: 34px;
-        color: #00492C;
+        color: #00492C !important;
         font-weight: 900;
         letter-spacing: -0.5px;
     }
@@ -102,7 +112,7 @@ st.markdown("""
         margin-top: 12px;
         padding: 8px 14px;
         background: #B1D8B8;
-        color: #00492C;
+        color: #00492C !important;
         border-radius: 999px;
         font-size: 13px;
         font-weight: 850;
@@ -111,41 +121,33 @@ st.markdown("""
     .section-title {
         font-size: 25px;
         font-weight: 900;
-        color: #00492C;
+        color: #00492C !important;
         margin-top: 20px;
         margin-bottom: 12px;
     }
 
-    .map-card {
-        background: rgba(255,255,255,0.92);
+    .map-card, .list-card {
+        background: rgba(255,255,255,0.96);
         border-radius: 28px;
         padding: 22px 24px 24px 24px;
         box-shadow: 0 14px 34px rgba(0,73,44,0.10);
-        border: 1px solid rgba(0,73,44,0.10);
-        margin-bottom: 28px;
-    }
-
-    .list-card {
-        background: rgba(255,255,255,0.92);
-        border-radius: 28px;
-        padding: 22px 24px;
-        box-shadow: 0 14px 34px rgba(0,73,44,0.10);
-        border: 1px solid rgba(0,73,44,0.10);
+        border: 1px solid rgba(0,73,44,0.12);
         margin-bottom: 28px;
     }
 
     .small-title {
         font-size: 21px;
         font-weight: 900;
-        color: #00492C;
+        color: #00492C !important;
         margin-bottom: 6px;
     }
 
     .desc-text {
-        color: #66746B;
+        color: #51635A !important;
         font-size: 14px;
-        font-weight: 600;
+        font-weight: 750;
         margin-bottom: 16px;
+        line-height: 1.7;
     }
 
     .insight-box {
@@ -155,16 +157,38 @@ st.markdown("""
         margin-top: 28px;
         margin-bottom: 30px;
         box-shadow: 0 10px 26px rgba(0,73,44,0.12);
-        color: #00492C;
+        color: #00492C !important;
         font-size: 20px;
-        font-weight: 750;
+        font-weight: 800;
     }
 
+    /* แก้ตัวอักษรแถบขวาไม่ให้หายใน Dark Mode */
     div[data-testid="stExpander"] {
-        background: rgba(255,255,255,0.90);
+        background: rgba(255,255,255,0.98) !important;
         border-radius: 18px !important;
-        border: 1px solid rgba(0,73,44,0.14) !important;
+        border: 1px solid rgba(0,73,44,0.16) !important;
         margin-bottom: 12px;
+        box-shadow: 0 8px 18px rgba(0,73,44,0.07);
+    }
+
+    div[data-testid="stExpander"] summary,
+    div[data-testid="stExpander"] summary *,
+    div[data-testid="stExpander"] div,
+    div[data-testid="stExpander"] p,
+    div[data-testid="stExpander"] span,
+    div[data-testid="stExpander"] label {
+        color: #00492C !important;
+        font-weight: 750 !important;
+    }
+
+    div[data-testid="stExpander"] small,
+    .stCaptionContainer {
+        color: #51635A !important;
+    }
+
+    div[data-testid="stDataFrame"] {
+        background: rgba(255,255,255,0.98) !important;
+        border-radius: 18px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -553,6 +577,10 @@ with col_map:
 
         df_map_show["DIST_TO_TRAIN_M"] = df_map_show["DIST_TO_TRAIN_KM"] * 1000
 
+        # เพิ่มขนาดจุดสวนให้ใหญ่และเด่น มองเห็นง่ายบนแผนที่
+        df_map_show["MARKER_SIZE"] = 18
+        df_map_show = df_map_show.sort_values("LATEST_PM25", ascending=True)
+
         fig = px.scatter_mapbox(
             df_map_show,
             lat="LAT",
@@ -571,15 +599,24 @@ with col_map:
                 "CAR_PARK": True,
                 "BICYCLE_PATH": True,
                 "PET_FRIENDLY": True,
+                "MARKER_SIZE": False,
                 "LAT": False,
                 "LNG": False
             },
             color="LATEST_PM25",
             color_continuous_scale=["#B1D8B8", "#FBBA16", "#F05A28", "#E22028"],
-            size="DIST_TO_TRAIN_KM",
-            size_max=18,
+            size="MARKER_SIZE",
+            size_max=30,
             zoom=10.8,
-            height=690
+            height=720
+        )
+
+        fig.update_traces(
+            marker=dict(
+                sizemin=14,
+                opacity=0.96,
+                line=dict(width=2.5, color="#00492C")
+            )
         )
 
         fig.update_layout(
