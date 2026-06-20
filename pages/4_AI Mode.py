@@ -645,5 +645,5 @@ with tab2:
 st.divider()
 
 st.caption(
-    "DADS5001 | Data Analytics and Data Science Tools and Programming"
+    "DADS5001 | BKK Urban Green Spaces & Connectivity"
 )
