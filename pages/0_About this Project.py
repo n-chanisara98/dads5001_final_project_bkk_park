@@ -4,6 +4,22 @@ def render_about_this_project():
     # ============================================================
     # 1. PREMIUM STYLE CONFIG (Theme: Flavour United)
     # ============================================================
+
+    st.markdown("""
+    <style>
+    section[data-testid="stSidebar"] {
+        background: linear-gradient(180deg, #00492C 0%, #17332A 100%) !important;
+        border-right: 1px solid rgba(255,255,255,0.10) !important;
+    }
+    section[data-testid="stSidebar"] * {
+        color: #FFF7E6 !important;
+    }
+    section[data-testid="stSidebar"] [data-testid="stSidebarNav"] {
+        padding-top: 1.5rem;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+    
     st.markdown("""
     <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght=400;600;700;800;900&display=swap');
