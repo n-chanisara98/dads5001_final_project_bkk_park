@@ -1,193 +1,183 @@
 import streamlit as st
 
-def render_about_page():
+def render_about_this_project():
     # ============================================================
-    # CUSTOM STYLE FOR ABOUT PAGE
+    # 1. STYLE CONFIGURATION (ธีมสีสดใส สวนธรรมชาติ + Flavour United)
     # ============================================================
     st.markdown("""
     <style>
-        .main-title {
-            font-size: 42px;
-            font-weight: 900;
-            color: #00492C;
-            margin-bottom: 5px;
-            text-align: center;
-        }
-        .main-subtitle {
-            font-size: 18px;
-            font-weight: 600;
-            color: #51635A;
-            text-align: center;
-            margin-bottom: 35px;
-        }
-        .grid-card {
-            background: rgba(255, 255, 255, 0.85);
-            border-radius: 24px;
-            padding: 28px;
-            box-shadow: 0 10px 30px rgba(0, 73, 44, 0.06);
-            border: 1px solid rgba(0, 73, 44, 0.08);
-            margin-bottom: 25px;
-            min-height: 340px;
-        }
-        .card-header {
-            font-size: 22px;
-            font-weight: 900;
-            color: #00492C;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .badge-container {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
-        }
-        .tech-badge {
-            background: #EAF6EF;
-            color: #00492C;
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 750;
-            border: 1px solid rgba(0, 73, 44, 0.15);
-        }
-        .db-badge {
-            background: #EBF3FC;
-            color: #1E4380;
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 750;
-            border: 1px solid rgba(30, 67, 128, 0.15);
-        }
-        .ai-badge {
-            background: #FFF8E7;
-            color: #B8860B;
-            padding: 6px 14px;
-            border-radius: 999px;
-            font-size: 13px;
-            font-weight: 750;
-            border: 1px solid rgba(184, 134, 11, 0.15);
-        }
-        ul.clean-list {
-            list-style-type: none;
-            padding-left: 0;
-        }
-        ul.clean-list li {
-            margin-bottom: 12px;
-            font-size: 14.5px;
-            color: #3A4740;
-            line-height: 1.5;
-            position: relative;
-            padding-left: 25px;
-        }
-        ul.clean-list li::before {
-            content: "•";
-            color: #00492C;
-            font-weight: bold;
-            font-size: 20px;
-            position: absolute;
-            left: 5px;
-            top: -2px;
-        }
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800;900&display=swap');
+
+    html, body, [class*="css"] { font-family: 'Inter', 'Noto Sans Thai', sans-serif; }
+    .stApp {
+        background:
+            radial-gradient(circle at top left, rgba(251,186,22,.25), transparent 30%),
+            radial-gradient(circle at top right, rgba(155,204,208,.42), transparent 32%),
+            linear-gradient(135deg, #FFF8E9 0%, #F8FBF1 45%, #EAF7EF 100%);
+    }
+    .block-container { padding-top: 1.6rem; padding-bottom: 3rem; max-width: 1500px; }
+
+    .hero-wrap {
+        position: relative;
+        overflow: hidden;
+        border-radius: 34px;
+        min-height: 280px;
+        padding: 42px 48px;
+        background:
+            linear-gradient(90deg, rgba(0,73,44,.94) 0%, rgba(0,73,44,.74) 42%, rgba(0,73,44,.12) 100%),
+            url('https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2200&q=85');
+        background-size: cover;
+        background-position: center;
+        box-shadow: 0 26px 80px rgba(0,73,44,.22);
+        border: 1px solid rgba(255,255,255,.40);
+        margin-bottom: 25px;
+    }
+    .hero-kicker {
+        display: inline-flex;
+        padding: 9px 15px;
+        background: #FBBA16;
+        color: #00492C;
+        border-radius: 999px;
+        font-size: 13px;
+        font-weight: 900;
+        letter-spacing: .04em;
+        text-transform: uppercase;
+    }
+    .hero-title {
+        margin-top: 18px;
+        max-width: 850px;
+        color: #FFF8E9;
+        font-size: clamp(38px, 4.5vw, 64px);
+        line-height: .98;
+        font-weight: 950;
+        letter-spacing: -2px;
+    }
+    
+    .section-title { margin: 35px 0 8px 0; color: #00492C; font-size: 28px; font-weight: 950; letter-spacing: -.4px; }
+    
+    /* Content Elements mapped with Home Theme classes */
+    .insight-box {
+        background: linear-gradient(135deg, rgba(251,186,22,.20), rgba(177,216,184,.45));
+        border: 1px solid rgba(0,73,44,.14);
+        border-radius: 26px;
+        padding: 24px 28px;
+        box-shadow: 0 14px 44px rgba(0,73,44,.05);
+        color: #17342A;
+        font-size: 15.5px;
+        line-height: 1.8;
+        margin-bottom: 20px;
+    }
+    .chart-card {
+        background: rgba(255,255,255,.84);
+        border: 1px solid rgba(0,73,44,.10);
+        border-radius: 28px;
+        padding: 26px 28px;
+        box-shadow: 0 18px 54px rgba(0,73,44,.07);
+        margin-bottom: 22px;
+    }
+    .chart-title { color:#00492C; font-size: 20px; font-weight: 950; margin-bottom: 12px; }
+
+    .story-card { border-radius: 26px; padding: 24px; background: #00492C; color: #FFF8E9; min-height: 150px; box-shadow: 0 14px 40px rgba(0,73,44,.10); margin-bottom: 15px; }
+    .story-card.yellow { background:#FBBA16; color:#00492C; }
+    .story-card.aqua { background:#9BCCD0; color:#00492C; }
+    
+    .story-card h4 { margin: 0 0 8px 0; font-size: 19px; font-weight: 950; }
+    .story-card p { margin: 0; line-height: 1.6; font-weight: 650; }
+    
+    ul.bullet-list { padding-left: 20px; margin-top: 8px; }
+    ul.bullet-list li { margin-bottom: 8px; font-weight: 650; color: #17342A; }
+    
+    hr { margin: 2rem 0; border: none; height: 1px; background: rgba(0,73,44,.14); }
     </style>
     """, unsafe_allow_html=True)
 
-    st.markdown("<div class='main-title'>🌳 About This Project</div>", unsafe_allow_html=True)
-    st.markdown("<div class='main-subtitle'>เบื้องหลังแนวคิด สถาปัตยกรรมข้อมูล และนวัตกรรม AI พัฒนาเพื่อคนเมืองกรุงเทพฯ</div>", unsafe_allow_html=True)
+    # ============================================================
+    # 2. HERO COMPONENT
+    # ============================================================
+    st.markdown("""
+    <div class="hero-wrap">
+        <div class="hero-kicker">ℹ️ Project Overview & Documentation</div>
+        <div class="hero-title">About This Project</div>
+    </div>
+    """, unsafe_allow_html=True)
 
     # ============================================================
-    # SECTION 1: ISSUES, MOTIVATION & OBJECTIVE (ROW 1)
+    # 3. ISSUES & MOTIVATION
     # ============================================================
-    col1, col2 = st.columns(2)
+    st.markdown('<div class="section-title">Issues & Motivation</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="insight-box">
+        แรงบันดาลใจจากการเติบโตของเทรนด์รักสุขภาพ ท่ามกลางข้อจำกัดของคนเมืองกรุง
+    </div>
+    """, unsafe_allow_html=True)
 
-    with col1:
-        st.markdown("""
-        <div class='grid-card'>
-            <div class='card-header'>🎯 Issues & Motivation</div>
-            <p style='color: #51635A; font-weight: 600; font-size: 14px; margin-bottom: 15px;'>
-                แรงบันดาลใจจากการเติบโตของเทรนด์รักสุขภาพ ท่ามกลางข้อจำกัดของคนเมืองกรุง
-            </p>
-            <ul class='clean-list'>
-                <li><b>Hidden Green Spaces:</b> สวนหลักหนาแน่นมาก แต่ยังมีพื้นที่สีเขียวทางเลือกอีกหลายแห่งกระจายอยู่ทั่วกรุงเทพฯ ที่ประชาชนยังเข้าไม่ถึงหรือยังไม่รู้จัก</li>
-                <li><b>The 3 Decision Pillars:</b> การเลือกใช้สวนของคนเมืองขับเคลื่อนด้วย 3 ปัจจัยหลัก ได้แก่ <b>Amenities</b> (สิ่งอำนวยความสะดวก), <b>Connectivity</b> (ความสะดวกในการเชื่อมต่อ BTS/MRT), และ <b>Health Safety</b> (ความปลอดภัยจากฝุ่น PM2.5)</li>
-                <li><b>Actionable Platform:</b> ต้องการสร้างเครื่องมือที่เปลี่ยนจากแค่การ 'รู้ว่ามีสวน' ไปสู่การ 'สนับสนุนให้คนกล้าออกไปขยับร่างกายอย่างมั่นใจ'</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with col2:
-        st.markdown("""
-        <div class='grid-card'>
-            <div class='card-header'>🚀 Project Objective</div>
-            <p style='color: #51635A; font-weight: 600; font-size: 14px; margin-bottom: 15px;'>
-                เป้าหมายสูงสุดของระบบ Interactive Park Finder
-            </p>
-            <ul class='clean-list'>
-                <li><b>All-in-One Dashboard:</b> ผสานรวมการค้นหา คัดกรอง และประเมินสภาพแวดล้อมของสวนสาธารณะให้อยู่บนหน้าจอเดียวแบบ Single-pane-of-glass</li>
-                <li><b>Dynamic Customization:</b> อนุญาตให้ผู้ใช้คัดกรองสวนตามเงื่อนไขเฉพาะตัว เช่น ต้องมีห้องน้ำ ระยะเดินไปรถไฟฟ้าไม่เกินกำหนด ควบคู่กับการแสดงค่าฝุ่นสดใหม่ทันที</li>
-                <li><b>Empowering Citizens:</b> ส่งเสริมให้การออกกำลังกายกลางแจ้ง (Open-air Workout) มีความปลอดภัยสูงสุด ลดความเสี่ยงทางสุขภาพจากการรับมลพิษโดยไม่ตั้งใจ</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
-
-    # ============================================================
-    # SECTION 2: ARCHITECTURE & METHODOLOGY (ROW 2)
-    # ============================================================
-    st.markdown("<h3 style='color: #00492C; font-weight: 900; margin-top: 20px; margin-bottom: 15px;'>🛠️ System Architecture & Data Engineering</h3>", unsafe_allow_html=True)
+    col_issue1, col_issue2 = st.columns(2)
     
-    col3, col4, col5 = st.columns(3)
-
-    with col3:
+    with col_issue1:
         st.markdown("""
-        <div class='grid-card' style='min-height: 400px;'>
-            <div class='card-header'>🗄️ Hybrid Database Strategy</div>
-            <div class='badge-container'>
-                <span class='db-badge'>Snowflake</span>
-                <span class='db-badge'>MongoDB Atlas</span>
-            </div>
-            <ul class='clean-list'>
-                <li><b>Structured Storage:</b> จัดเก็บข้อมูลมิติสวนสาธารณะ สิ่งอำนวยความสะดวก และพิกัดโครงข่ายระบบราง (BTS/MRT) ไว้บน Cloud Data Warehouse ของ <b>Snowflake</b> เพื่อความแม่นยำสูง</li>
-                <li><b>Dynamic JSON Management:</b> บริหารจัดการข้อมูลค่าฝุ่นรายชั่วโมงที่มีโครงสร้างยืดหยุ่นจาก Air4Thai API ผ่าน <b>MongoDB Atlas</b> (NoSQL Cloud)</li>
-                <li><b>Real-time Upsert Pipeline:</b> ทันทีที่มีการเข้าใช้งานแอปพลิเคชัน ระบบจะยิง API ดึงค่าฝุ่นสดใหม่ และสั่งอัปเดตลง MongoDB ด้วยกลยุทธ์ <code>replace_one</code> ทับสถานีเดิม (90 สถานี) ป้องกันฐานข้อมูลบวมและรักษาความเร็ว</li>
+        <div class="story-card">
+            <h4>1) สวนหลักหนาแน่นมาก</h4>
+            <p>แต่ยังมีพื้นที่สีเขียวทางเลือกอีกหลายแห่งกระจายอยู่ทั่วกรุงเทพฯ ที่ประชาชนยังเข้าไม่ถึงหรือยังไม่รู้จัก</p>
+        </div>
+        """, unsafe_allow_html=True)
+
+    with col_issue2:
+        st.markdown("""
+        <div class="story-card yellow">
+            <h4>2) การใช้สวนของคนเมืองขับเคลื่อนด้วย 3 ปัจจัยหลัก ได้แก่</h4>
+            <ul class="bullet-list" style="color: #00492C;">
+                <li>Amenities (สิ่งอำนวยความสะดวก)</li>
+                <li>Connectivity (ความสะดวกในการเชื่อมต่อ BTS/MRT)</li>
+                <li>Health Safety (ความปลอดภัยจากฝุ่น PM2.5)</li>
             </ul>
         </div>
         """, unsafe_allow_html=True)
 
-    with col4:
-        st.markdown("""
-        <div class='grid-card' style='min-height: 400px;'>
-            <div class='card-header'>⚡ Processing & DuckDB Engine</div>
-            <div class='badge-container'>
-                <span class='tech-badge'>DuckDB</span>
-                <span class='tech-badge'>SciPy (cdist)</span>
-                <span class='tech-badge'>Pandas</span>
-            </div>
-            <ul class='clean-list'>
-                <li><b>Geospatial Matrix:</b> ใช้ฟังก์ชัน <code>cdist</code> จากคอมโพเนนต์ SciPy ในการคำนวณระยะทางพิกัดภูมิศาสตร์ เพื่อจับคู่สวนสาธารณะเข้ากับสถานีตรวจวัดฝุ่นที่อยู่ใกล้ที่สุดโดยอัตโนมัติ</li>
-                <li><b>In-Memory SQL Engine:</b> จดทะเบียนตารางผลลัพธ์ที่ Merge แล้วเข้าสู่ <b>DuckDB</b> เพื่อทำหน้าที่เป็นสเปซประมวลผลคำสั่งคัดกรองในหน่วยความจำ</li>
-                <li><b>Sub-second Filter:</b> เปลี่ยนจากการพึ่งพา Pandas Logic เพียวๆ มาใช้พลังของ SQL บน DuckDB ทำให้เมื่อผู้ใช้ปรับเงื่อนไขตัวกรอง (Filter) บนแอป แผนที่ Interactive จะเรนเดอร์ใหม่ในเสี้ยววินาที</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    # ============================================================
+    # 4. OBJECTIVE
+    # ============================================================
+    st.markdown('<div class="section-title">Objective</div>', unsafe_allow_html=True)
+    st.markdown("""
+    <div class="chart-card">
+        <p style="font-size: 16px; line-height: 1.8; color: #17342A; font-weight: 650; margin: 0;">
+        วัตถุประสงค์ของโปรเจกต์ จึงเป็นการสร้างระบบค้นหาและคัดกรองสวนสาธารณะในกรุงเทพฯ หรือ Interactive Park Finder ขึ้นมา
+        เพื่อเป็นเครื่องมือให้ผู้ใช้งานสามารถ 'เลือกและคัดกรองสวน' ตามเงื่อนไขความสะดวกของตัวเอง
+        ไม่ว่าจะเป็นสิ่งอำนวยความสะดวก ระยะห่างจากรถไฟฟ้า ควบคู่ไปกับการเช็กค่าฝุ่น PM2.5 ล่าสุด ณ สวนแห่งนั้นได้ทันทีในหน้าจอเดียว เพื่อช่วยในการตัดสินใจ
+        และส่งเสริมให้คนกรุงออกไปใช้พื้นที่สีเขียวได้อย่างมั่นใจและปลอดภัยที่สุด
+        </p>
+    </div>
+    """, unsafe_allow_html=True)
 
-    with col5:
-        st.markdown("""
-        <div class='grid-card' style='min-height: 400px;'>
-            <div class='card-header'>🤖 AI Wellness Integration</div>
-            <div class='badge-container'>
-                <span class='ai-badge'>Gemini 2.5 Flash</span>
-                <span class='ai-badge'>Prompt Guardrails</span>
-            </div>
-            <ul class='clean-list'>
-                <li><b>Core AI Engine:</b> บูรณาการ <b>Gemini 2.5 Flash API</b> เพื่อขับเคลื่อนฟีเจอร์ AI Urban Wellness Assistant รองรับการประมวลผลและการตอบกลับที่รวดเร็ว</li>
-                <li><b>Context-Aware Framework:</b> ระบบจะดึงโครงสร้างข้อมูลพื้นที่ (Area) และระยะทางลู่วิ่งจริงจาก Snowflake มาเข้า Rule-based Logic แยกประเภทสวนก่อนป้อนเข้า Prompt</li>
-                <li><b>Strict Prompt Guardrails:</b> ควบคุมพฤติกรรม LLM ไม่ให้หลุดกรอบนอกเรื่องสุขภาพ ออกแบบแผนสอดคล้องกับขนาดสวนจริง (เช่น สวนเล็กเน้น Bodyweight / สวนใหญ่เน้นวิ่ง) พร้อมปฏิเสธเคสทางการแพทย์เฉพาะทางเพื่อความปลอดภัย</li>
-            </ul>
-        </div>
-        """, unsafe_allow_html=True)
+    # ============================================================
+    # 5. SOLUTION (METHODOLOGY)
+    # ============================================================
+    st.markdown('<div class="section-title">Solution (Methodology)</div>', unsafe_allow_html=True)
 
-# เรียกใช้งานฟังก์ชันหน้า About (สามารถสลับหน้าโดยใช้ Sidebar Selectbox ได้ปกติเลยครับ)
-render_about_page()
+    # --- 5.1 Database Architecture ---
+    st.markdown("""
+    <div class="chart-card">
+        <div class="chart-title">1) Database Architecture</div>
+        <p style="font-size: 15px; color: #17342A; font-weight: 650; margin-bottom: 15px;">
+        สถาปัตยกรรมข้อมูลเป็นแบบ Hybrid โดยจัดเก็บข้อมูลแยกเป็น 2 ส่วนหลัก
+        </p>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div style="background: rgba(0,73,44,.05); padding: 20px; border-radius: 18px; border-left: 5px solid #00492C;">
+                <b style="color: #00492C; font-size: 16px;">• Snowflake:</b>
+                <p style="margin: 8px 0 0 0; font-weight: 650; color: #17342A; font-size: 14.5px;">ใช้จัดเก็บ ข้อมูลที่มีโครงสร้างชัดเจนอย่าง มิติของสวนสาธารณะ รายชื่อสิ่งอำนวยความสะดวก และพิกัดสถานีรถไฟฟ้า BTS/MRT</p>
+            </div>
+            <div style="background: rgba(251,186,22,.08); padding: 20px; border-radius: 18px; border-left: 5px solid #FBBA16;">
+                <b style="color: #b38000; font-size: 16px;">• MongoDB:</b>
+                <p style="margin: 8px 0 0 0; font-weight: 650; color: #17342A; font-size: 14.5px;">ใช้จัดเก็บข้อมูลค่าฝุ่น PM2.5 จากสถานีตรวจวัดในเขตต่างๆ ซึ่งมีลักษณะเป็น Dynamic JSON จากภายนอก</p>
+            </div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
+
+    # --- 5.2 Processing & DuckDB Engine ---
+    st.markdown("""
+    <div class="chart-card">
+        <div class="chart-title">2) Processing & DuckDB Engine</div>
+        <div style="display: flex; flex-direction: column; gap: 16px; margin-top: 15px;">
+            <div style="border-bottom: 1px solid rgba(0,73,44,.08); padding-bottom: 12px;">
+                <b style="color: #00492C; font-size: 15.5px;">- Dynamic JSON Management:</b>
+                <p style="margin: 6px 0 0 0; font-weight: 650; color: #17342A; line-height: 1.6;">
