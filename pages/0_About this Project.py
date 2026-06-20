@@ -137,7 +137,7 @@ def render_about_this_project():
 
     # 3. OBJECTIVE
     st.markdown('<div class="section-title">Objective</div>', unsafe_allow_html=True)
-    st.markdown('<div class="solution-card"><p style="font-size: 16px; line-height: 1.8; color: #17342A; font-weight: 650; margin: 0;">💡 วัตถุประสงค์ของโปรเจกต์ จึงเป็นการสร้างระบบค้นหาและคัดกรองสวนสาธารณะในกรุงเทพฯ หรือ <b>Interactive Park Finder</b> ขึ้นมา เพื่อเป็นเครื่องมือให้ผู้ใช้งานสามารถเลือกและคัดกรองสวนตามเงื่อนไขความสะดวกของตัวเอง ระยะห่างจากรถไฟฟ้า พร้อมเช็กค่าฝุ่น PM2.5 ล่าสุด เพื่อส่งเสริมให้คนกรุงออกไปใช้พื้นที่สีเขียวได้อย่างมั่นใจและปลอดภัยที่สุด</p></div>', unsafe_allow_html=True)
+    st.markdown('<div class="solution-card"><p style="font-size: 16px; line-height: 1.8; color: #17342A; font-weight: 650; margin: 0;">💡 วัตถุประสงค์ของโปรเจกต์ คือการสร้างระบบค้นหาและคัดกรองสวนสาธารณะในกรุงเทพฯ หรือ <b>Interactive Park Finder</b> ขึ้นมา เพื่อเป็นเครื่องมือให้ผู้ใช้งานสามารถเลือกและคัดกรองสวนตามเงื่อนไขความสะดวกของตัวเอง ระยะห่างจากรถไฟฟ้า พร้อมเช็กค่าฝุ่น PM2.5 ล่าสุด เพื่อส่งเสริมให้คนกรุงออกไปใช้พื้นที่สีเขียวได้อย่างมั่นใจและปลอดภัยที่สุด</p></div>', unsafe_allow_html=True)
 
     # 4. SOLUTION (METHODOLOGY) - Interactive Slide
     st.markdown('<div class="section-title">Solution (Methodology)</div>', unsafe_allow_html=True)
