@@ -204,7 +204,7 @@ html, body, [class*="css"] { font-family: 'Inter', 'Noto Sans Thai', sans-serif;
 }
 .insight-box b { color: #00492C; }
 .chart-card {
-    background: rgba(255,255,255,.84);
+    background: rgba(255,255,255,.94);
     border: 1px solid rgba(0,73,44,.10);
     border-radius: 28px;
     padding: 20px 20px 10px 20px;
@@ -220,6 +220,31 @@ html, body, [class*="css"] { font-family: 'Inter', 'Noto Sans Thai', sans-serif;
 .story-card h4 { margin: 0 0 8px 0; font-size: 20px; font-weight: 950; }
 .story-card p { margin: 0; line-height: 1.7; font-weight: 650; }
 hr { margin: 2rem 0; border: none; height: 1px; background: rgba(0,73,44,.14); }
+
+/* ===== Plotly Chart Dark Mode Readability Fix ===== */
+.chart-card,
+.chart-card *,
+.js-plotly-plot,
+.js-plotly-plot * {
+    color: #17342A !important;
+}
+
+.chart-card {
+    background: rgba(255,255,255,.94) !important;
+}
+
+.modebar,
+.modebar * {
+    color: #00492C !important;
+}
+
+/* ให้ Tooltip อ่านง่ายทั้ง Light/Dark */
+.hoverlayer .hovertext,
+.hoverlayer .hovertext * {
+    fill: #FFFFFF !important;
+    color: #FFFFFF !important;
+}
+
 </style>
 """, unsafe_allow_html=True)
 
@@ -358,12 +383,23 @@ else:
 st.markdown('<div class="section-title">Green Space & Usage Analytics</div>', unsafe_allow_html=True)
 st.markdown('<div class="section-note">เปรียบเทียบขนาดพื้นที่กับจำนวนผู้ใช้งาน เพื่อดูว่าพื้นที่ใดมีศักยภาพสูงและพื้นที่ใดมีการใช้งานหนาแน่น</div>', unsafe_allow_html=True)
 
+# Plotly layout กลาง: บังคับสีตัวอักษร/พื้นหลังให้อ่านได้ทั้ง Light Mode และ Dark Mode
 plotly_common_layout = dict(
-    paper_bgcolor="rgba(0,0,0,0)",
-    plot_bgcolor="rgba(255,255,255,.55)",
-    font=dict(family="Inter, Noto Sans Thai, sans-serif", color="#17342A", size=12),
-    margin=dict(l=110, r=45, t=10, b=35),
-    height=400,
+    paper_bgcolor="rgba(255,255,255,0.96)",
+    plot_bgcolor="rgba(255,255,255,0.98)",
+    font=dict(
+        family="Inter, Noto Sans Thai, sans-serif",
+        color="#17342A",
+        size=13
+    ),
+    margin=dict(l=125, r=130, t=20, b=55),
+    height=420,
+    hoverlabel=dict(
+        bgcolor="#17342A",
+        font_size=13,
+        font_color="#FFFFFF",
+        bordercolor="#00492C"
+    )
 )
 
 pair1_col1, pair1_col2 = st.columns(2)
@@ -379,10 +415,23 @@ with pair1_col1:
             color_continuous_scale=[[0, "#B1D8B8"], [0.55, "#2E8B57"], [1, "#00492C"]],
             labels={"Chart_Area": "ขนาดพื้นที่ (ตร.ม.)", y_axis_col: y_label_text}
         )
-        fig_area.update_traces(textposition="outside", marker_line_width=0, cliponaxis=False)
+        fig_area.update_traces(
+            textposition="outside",
+            textfont=dict(color="#17342A", size=13),
+            marker_line_width=0,
+            cliponaxis=False
+        )
         fig_area.update_layout(**plotly_common_layout, showlegend=False, coloraxis_showscale=False)
-        fig_area.update_xaxes(gridcolor="rgba(0,73,44,.08)", zeroline=False)
-        fig_area.update_yaxes(title=None)
+        fig_area.update_xaxes(
+            gridcolor="rgba(0,73,44,.12)",
+            zeroline=False,
+            tickfont=dict(color="#17342A", size=13),
+            title_font=dict(color="#17342A", size=14)
+        )
+        fig_area.update_yaxes(
+            title=None,
+            tickfont=dict(color="#17342A", size=13)
+        )
         st.plotly_chart(fig_area, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลพื้นที่")
@@ -399,10 +448,23 @@ with pair1_col2:
             color_continuous_scale=[[0, "#FBBA16"], [0.55, "#E94B2B"], [1, "#E22028"]],
             labels={"Chart_Visitors": "จำนวนผู้เข้าชม (คน/เดือน)", y_axis_col: y_label_text}
         )
-        fig_visitors.update_traces(textposition="outside", marker_line_width=0, cliponaxis=False)
+        fig_visitors.update_traces(
+            textposition="outside",
+            textfont=dict(color="#17342A", size=13),
+            marker_line_width=0,
+            cliponaxis=False
+        )
         fig_visitors.update_layout(**plotly_common_layout, showlegend=False, coloraxis_showscale=False)
-        fig_visitors.update_xaxes(gridcolor="rgba(0,73,44,.08)", zeroline=False)
-        fig_visitors.update_yaxes(title=None)
+        fig_visitors.update_xaxes(
+            gridcolor="rgba(0,73,44,.12)",
+            zeroline=False,
+            tickfont=dict(color="#17342A", size=13),
+            title_font=dict(color="#17342A", size=14)
+        )
+        fig_visitors.update_yaxes(
+            title=None,
+            tickfont=dict(color="#17342A", size=13)
+        )
         st.plotly_chart(fig_visitors, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลผู้ใช้งาน")
@@ -424,10 +486,23 @@ with pair2_col1:
             color_continuous_scale=[[0, "#E2B2B4"], [0.52, "#9BCCD0"], [1, "#1E4380"]],
             labels={"Chart_Ratio": "ดัชนีอัตราส่วน (เท่า)", y_axis_col: y_label_text}
         )
-        fig_ratio.update_traces(textposition="outside", marker_line_width=0, cliponaxis=False)
+        fig_ratio.update_traces(
+            textposition="outside",
+            textfont=dict(color="#17342A", size=13),
+            marker_line_width=0,
+            cliponaxis=False
+        )
         fig_ratio.update_layout(**plotly_common_layout, showlegend=False, coloraxis_showscale=False)
-        fig_ratio.update_xaxes(gridcolor="rgba(0,73,44,.08)", zeroline=False)
-        fig_ratio.update_yaxes(title=None)
+        fig_ratio.update_xaxes(
+            gridcolor="rgba(0,73,44,.12)",
+            zeroline=False,
+            tickfont=dict(color="#17342A", size=13),
+            title_font=dict(color="#17342A", size=14)
+        )
+        fig_ratio.update_yaxes(
+            title=None,
+            tickfont=dict(color="#17342A", size=13)
+        )
         st.plotly_chart(fig_ratio, use_container_width=True)
     else:
         st.info("ไม่พบข้อมูลดัชนี")
@@ -452,12 +527,36 @@ with pair2_col2:
             color="สิ่งอำนวยความสะดวก",
             color_discrete_map={"ที่จอดรถ": "#1E4380", "ทางจักรยาน": "#FBBA16", "มิตรกับสัตว์เลี้ยง": "#9BCCD0"}
         )
-        fig_donut.update_traces(textposition="inside", textinfo="percent+value", marker=dict(line=dict(color="#FFF8E9", width=4)))
+        fig_donut.update_traces(
+            textposition="inside",
+            textinfo="percent+value",
+            textfont=dict(color="#17342A", size=14),
+            marker=dict(line=dict(color="#FFF8E9", width=4))
+        )
         fig_donut.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            font=dict(family="Inter, Noto Sans Thai, sans-serif", color="#17342A", size=13),
-            height=400, margin=dict(l=20, r=20, t=10, b=30),
-            legend=dict(orientation="h", yanchor="bottom", y=-0.08, xanchor="center", x=0.5)
+            paper_bgcolor="rgba(255,255,255,0.96)",
+            plot_bgcolor="rgba(255,255,255,0.98)",
+            font=dict(
+                family="Inter, Noto Sans Thai, sans-serif",
+                color="#17342A",
+                size=13
+            ),
+            height=420,
+            margin=dict(l=20, r=20, t=20, b=55),
+            legend=dict(
+                orientation="h",
+                yanchor="bottom",
+                y=-0.10,
+                xanchor="center",
+                x=0.5,
+                font=dict(color="#17342A", size=13)
+            ),
+            hoverlabel=dict(
+                bgcolor="#17342A",
+                font_size=13,
+                font_color="#FFFFFF",
+                bordercolor="#00492C"
+            )
         )
         st.plotly_chart(fig_donut, use_container_width=True)
     else:
