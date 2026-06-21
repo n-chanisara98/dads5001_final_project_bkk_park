@@ -15,8 +15,9 @@
 # Link to Streamlit
 
 https://dads5001finalprojectbkkpark-9xkmuikpe3wbrgxijqhbqk.streamlit.app/
-https://drive.google.com/file/d/1qZc8t9OBjrcszYKGmMfZ86gHW5zdW7Kf/view?usp=sharing
 
+# Link to Presentation
+https://drive.google.com/file/d/1qZc8t9OBjrcszYKGmMfZ86gHW5zdW7Kf/view?usp=sharing
 
 ## Issues and Motivation 
 
