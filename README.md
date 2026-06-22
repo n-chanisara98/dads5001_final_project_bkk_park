@@ -54,5 +54,17 @@ o	Core Engine หลัก เลือกใช้โมเดล Gemini 2.5 Fl
 
 o	AI ทำงานร่วมกับฐานข้อมูลจริง ผ่านกระบวนการที่เรียกว่า Context-Aware Prompt Engineering ร่วมกับการให้ระบบหลังบ้านจะวิ่งไปดึงข้อมูลจริงของสวนจาก Snowflake นำมาเข้า Rule-based Logic ก่อน ก่อนจะใส่เข้าไปในตัว Prompt เพื่อส่งให้ Gemini เพื่อ control ให้คำตอบอิง database จริง และคำตอบออกมาเกี่ยวข้องและเหมาะสมกับหัวข้อการออกกำลังกาย และสุขภาพ
 
+## Dataset
+
+https://envilink.go.th/dataset/air-quality-pm2point5/resource/e7dcec6a-02ea-4261-836c-6d74f549935b
+https://gdcatalognhic.nha.co.th/en/dataset/mrt/resource/f6f76b02-e318-4cd3-9fd8-8c1443fee311
+https://gdcatalognhic.nha.co.th/en/dataset/bangkok-mass-transit-system-bts
+https://data.bangkok.go.th/dataset/bkkpopulationdistric
+https://data.bangkok.go.th/dataset/env0014
+https://data.bangkok.go.th/dataset/env_park_users
+https://data.bangkok.go.th/dataset/park
+https://data.bangkok.go.th/dataset/mappark
+https://data.bangkok.go.th/dataset/env_park_path
+
 
 
